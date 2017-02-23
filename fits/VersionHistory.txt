@@ -1,0 +1,197 @@
+Observations:
+- updating threshold does not affect performance as much as the simulations themselves
+- 20160929 - again tried the std binomial. still slower than bnldev, does not affect fitness accuracy.
+- 20160929 - again tried distance measuring other than abs (e.g. squared distance), did not improve accuracy.
+- 20161019 - O3 optimization on power increases performance to ~20k sims/sec. Mac still goes >30k.
+                total performance in cluster measures about 1 loci (1M sims) / 1 sec!!! Amazing.
+                Whole poliovirus genome in two hours.
+- 20161019 - allocated 300MB to each locus.
+
+
+REJECTED:
+- replacement of vector with deque; FITS uses ~200MB at most, don't think it's worth the effort
+- sort (< operator) by each allele instead of total sum of distance. Doesn'r improve results
+
+
+IDEA - multiply frequencies before comparing distances such rhat they all are in the same magnitude. e.g. 0.0001 multiplied till it is 0.1 for distance comparison purposes. That way alleles with expremeely minor frequencies still count and don't get wide range of fitness values.
+
+
+Future versions
+
+- : Feature review - go over and see what I've really implemented and tested
+- : change "base" to "allele", change it from int to std::string to allow letters
+- : return to parallel simulations, now with async - simply dispatch batches using async within CMulatorABC object
+    SHOULD THE ASYNC BE WITHIN THE BATCH SUBROUTINE, OR WRAP IT?
+- : replace float with double, but do it with #define to allow return if too slow
+- : TODO: control precision of random fitness values. We don't care about more than 3 decimal places. This could open up rounding to 0.
+- : CMulatorToolbox - not static
+- : Replace multi_array with ublast matrix
+- : Calculate next generation using vectorXmatrix multiplication
+- : make sense in storing generation number (e.g. generation shift, generation+1, what is generation 0)
+- : mark all variables as unsigend, unless otherwise needed **Note that -1 is often used to indicate default value**
+- : make sure validation functions are used and only they are used for validation (no ad hoc conditions)
+- wrap boost exception with more readable error of invalid parameter
+- make binomial selection in a separate function to minimize code repetition
+- within GetRawFrequencyData, move resampling such that it won't happen regardless if needed. Consider having two matrices - one for actual values and one for sampled.. e.g. _sim_data_sampled_for_next_passage.
+- unify the two functions of GetRawFrequencyData such that the one that does not select a subset simply selects a subset identical to the whole data.
+- BUILD TOOL TO COMPARE BETWEEN VERSIONS, TO PREVENT DESTRYING THE PROGRAM THROUGH DEVELOPMENT
+- delete commented lines no longer needed
+- easier integration with Qt by exporting the approproate functions
+- TODO: EXPLORE GENERATION INFERENCE
+
+TODO:
+- Stop calculating distance sim_actual if not needed
+
+FITS 0.87 - under development
+    - CHECK - compare SD calculated from a batch of simulations vs. SD of the entire set
+    - TODO parameter _acceptance_rate instead of _sims_to_keep to be more coherent.
+    - ADDED Coverage testing
+    - ADDED Scaling of all simulations
+    - changed back to FITS as in 'Flexible'
+    - removed error for not mentioning top percent to keep, because it was triggered even if only a simulation was asked. Need to be triggered only for inference.
+    - Debug functionality extended. _debug_mode flag within CMulator core
+    - Added rejection threshold used for inference to the summary report
+    - FIXED(?) when inferring mutation rate, the software throws errors that mutation rate was not given, even though it indeed should not be given and it's ok.
+
+    - CHANGED for population size and mutation rate - prior distribution is log uniform
+
+    - ADDED ability to specify proprtions of LTH/DEL/NEU/ADV mutations for composite fitness distribution
+
+    - ADDED ability to identify the sample from the prior that led to the current result (prior_sample_index in SimulationResult)
+IMPORTANT: apparenly for each batch of ABC the prior is generated from scratch. This causes mnimal memory use, but does not allow to trace back samples. I've added the _prior_archive for holding previous samples, but this is expected to raise the memory requirements. Memory allocated in cluster should be reevaluated.
+    TEMP DISABLED THIS. WILL RECREATE THE PRIOR.
+
+    - ADDED last used rejection threshold to summary report
+
+    - ADDED alternative population size. Once, at a randomly chosen generation, the population size will change to this value.
+            This is created in order to introduce noise to the simulated data.
+            This is patchy, and should be developed to either a fully parametered feature or to a full-blown scripting,
+            i.e. at generation X change fitness of allele Y; at generation X change pop size to N1, etc.
+
+- TODO
+    - minor bug fixes to improve mutation rates and population size inference accuracy
+    - add log uniform distribution
+    - consider - allow log uniform along with uniform
+    - composite for fitness unless otherwise chosen by user
+    - verify that actual data given in correct format (generation, base etc.)
+    - Ability to set/infer a single mutation rate for all alleles
+    - Calculate heterozygosity?
+
+
+MITS 0.86.3 2017-01-15
+    - population no longer recived actual pop size for min and max but rather the exponent (i.e. 10^min, 10^max)
+    - began employing the debug switch (in param file Debug 1)
+    - mutation same as population - log uniform
+
+MITS 0.86.2 2016-12-26
+    - Fixed behavior - apparenlty crashes without giving out error message. Deployed to help Danielle M
+
+MITS 0.86.1
+    - FIXED: doesn't throw some unnecessary exceptions
+
+MITS 0.86 - 2016-11-17
+- ADDED/CHANGED
+    - Moved ABC entirely into clsCMulatorABC - this would allow easy integration to GUI
+    - ability to infer population size and mutation rates
+    - CMulatorToolbox almost entirely gone.
+    - Massive reorganization of code (see initialization of member variables in CMulator)
+    - ActualDataFile class
+    - SimulationResult and ActualDataEntry no longer part of CMulatorToolbox
+    - PriorSampler replaced clsFieldRange; I keep clsFieldRange for the time being as backup
+    - more functions marked as const
+    - added catch for more exceptions (so won't be "unknown")
+    - more exceptions are of std:exception type to be more readable
+    - parameters not held as member, but rather used temporarily to initialize the cmulator object
+    - parsing now uses boost lexical cast in order to be more strict (previously 123fjh would be read as 123 with no error, now an error will be given - boost lexical cast exception)
+    - New class for sampling from prior (instead of clsFieldRange) - slowly transition. Its main advantage is the ability to sample float and int types. If you want to put this in matrix, you can.
+    - read parameter file only outside cmulator, only pass zparams object to cmulator ctor
+    - parameterize prior - either uniform or composite
+- FIXED
+    - population frequencies were resamples (_sample_size) only in output to R (which is not used for a while). I reintroduced this concept into the Raw frequencies functions in order to make the model more reliable.
+    - hopefully fixed segmentation fault while generating report. this could have been caused by improperly-initialized accumulators. thing is - if this was the problem it is not clear how it worked well thus far.
+
+
+FITS 0.85
+- Completely removed pupko library
+- Parameters library replaced by zparams
+- binomial distribution of boost works great performance-wise - still getting 30k+ sims/sec maybe even better
+- No Compilation errors/warnings at all for the first time ever
+
+
+FITS 0.84
+- Prior distribution is back to uniform, but changeable at compile time
+- Slowly moving to ZParams (loading but not using)
+
+
+FITS 0.83
+- Code cleanup (Parallel), not "using namespace std" in most code (equivalent boost types also used; creates confusion)
+
+
+FITS 0.82 2016-10-05
+- ADDED: Two dedicated output files - one for distribution and one for the report
+- ADDED: relaxed (50%) threshold along with the old, strict (95%) threshold. Additional classes - ADV? in addition to ADV, etc.
+- ADDED: shrink_to_fit() to results vector before passing it to processing, maybe it will help with crashes due to memory issues (page fault)
+- ADDED: pre-allocation of memory (10xchunk size) as a result of empiric observations
+- ADDED: sanity checks on size of vector of results - if empty throw exception and report
+- REMOVED: "infer" switch no longer supported
+- SOLVED: frequent runs resulted in using identical seed, thus yielding identical results. seed changed from time(0) to chrono high resolution clock
+- SOLVED: ABC will run even if _num_repeats is not given - should crash if 0 simulations are to be kept
+- SOLVED: if unkown parameter is given the software does not crash with error, simply terminates
+- SOLVED: wt allele not marked as such because member wasnt copied in copy ctor
+- CHANGED: GetDistanceSimActual - now uses std::transform and std::accumulate, hopefully faster
+
+
+
+FITS 0.8 2016-07-07
+- output of report is now also written (commented) to output file
+- (-infer) switch is deprecated as mutation inference is being developed
+- WT allele marked as WT instead of NEU
+
+
+Commandline 0.7 2016-06-23
+- while attemptig to compile on cluster, mentioning threading cuases gcc 4.9 to work fine,
+but the software crashed with segmentation fault (runs perfect on windows).
+- moving to gcc 5.3 allergic reaction to threading - mentioning "future" and "async" etc.
+causes gcc to print error of unreferred call to pthread or something like that. commented with #ifdef
+all mentioning of threading, and now compiles fine except for deprecated std libraries that boost 1.60 uses
+(only warnings).
+- got back to using move, also solved some things. basically i have no idea where the segmentation fault came from and why it is solved.
+partially
+- exception was thrown as the result vector (very large!) was copied. Passing by ref solved the problem.
+- on cluster - able to run 6,084 sim/sec (not optimized, not parallelized) This is down to ~3,000 on 9/2016 not sure why
+
+- While losing my mind with various exceptions of text "std::exception" and still segmentation faults,
+it seems like many of my copy ctors don't function well(?) as when pushing copies to vectors the program crashes and
+when using move the program runs well (context of SimulationResult).
+
+- Output seemed very synchronized in sense that it's being locked in a bad way. Moved lock guards to #ifdef
+- Print order hasn't changed after disabling all mutexes
+
+Commandline 0.6
+- Fixed a major bug. Initial allele frequencies used to be constantly reset to -1, as member variables storing these values were not initialized from actual data.
+It should be noted that these variables are initialized if values are given in parameter file.
+
+Commandline 0.5
+- CMulator: GetAllOutputAsText - header used to print alleles with space, eg "Allele 0", caused problems, now space omitted and all lowercase
+
+
+Commandline 0.4 - Sampling edition
+- Added "rounding" of fitness values to nearest multiplicity of increment such that output is similar to previous versions
+- TODO: check if using a different random engine affects results (as rate is less important now - bnldev much faster than std::mt)
+- TODO: print final epsilon in report
+- TODO (done, untested): prepare random number service class as an alternative to global bnldev
+
+Commandline 0.3 - Sampling edition
+- Minor bug fixes, elaborated printing of distribution
+- Ayelet ran tests, observed error of 0.01 relative to complete scan
+- Ayelet ran tests, rounding to nearest multiplicity of increment reduces error a bit, may be more logical
+
+Commandline 0.2 - Sampling edition
+- Fork, applying sampling instead of scanning whole fitness range
+
+Commandline 0.11
+- fixed bug - writing wrong number of simulations (using number of repeats)
+- fixed bug - writing one additional line than needed to
+
+Commandline 0.1
+- multithreaded
