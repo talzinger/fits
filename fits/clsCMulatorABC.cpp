@@ -252,3 +252,58 @@ void clsCMulatorABC::SetImmediateRejection(bool new_val)
     _use_rejection_threshold = new_val;
 }
 
+FLOAT_TYPE clsCMulatorABC::GetDistanceSimActual( ActualDataFile actual_data, SimulationResult sim_result )
+{
+    // get the generations actual data is available for
+    auto generation_list = actual_data.GetActualGenerations();
+    auto actual_freqs_matrix = actual_data.GetActualFreqsAsMatrix();
+    
+    // get matrix indeces equivalent of the desired generations by shifting
+    std::vector<int> shifted_generations( generation_list.size(), sim_result.generation_shift );
+    
+    std::transform( generation_list.cbegin(), generation_list.cend(),
+                   shifted_generations.cbegin(),
+                   shifted_generations.begin(),
+                [](int generation, int shift) { return generation - shift; });
+    
+    MATRIX_TYPE sim_freqs_matrix( generation_list.size(), sim_result.sim_data_matrix.size2() );
+    
+    for ( auto current_target_row=0; current_target_row<generation_list.size(); ++current_target_row ) {
+        boost::numeric::ublas::matrix_row<boost::numeric::ublas::matrix<float>> original_row( sim_result.sim_data_matrix, generation_list[current_target_row] );
+        boost::numeric::ublas::matrix_row<boost::numeric::ublas::matrix<float>> target_row( sim_freqs_matrix, current_target_row );
+        
+        std::cout << "copying row " << generation_list[current_target_row] << " as row " << current_target_row << std::endl;
+        
+        target_row = original_row;
+    }
+    
+    if ( sim_freqs_matrix.size1() != actual_freqs_matrix.size1() ||
+        sim_freqs_matrix.size2() != actual_freqs_matrix.size2() ) {
+        std::cerr << "Actual and sim matrices don't match in size: actual("
+        << actual_freqs_matrix.size1()
+        << ","
+        << actual_freqs_matrix.size2()
+        << ") sim("
+        << sim_freqs_matrix.size1()
+        << ","
+        << sim_freqs_matrix.size2()
+        << ")"
+        << std::endl;
+        
+        throw "Actual and sim matrices don't match in size";
+    }
+    
+    // get the scaling factor
+    auto scaling_factor_vec = GetSDPerAllele(0, _simulation_result_vector.size());
+    
+    // we now have compatible actual_data and simulated_data matrices
+    std::vector<FLOAT_TYPE> distance_per_allele(scaling_factor_vec.size(), 0.0f);
+    
+    for ( auto current_allele=0; current_allele<scaling_factor_vec.size(); ++current_allele ) {
+        
+    }
+    
+    // calculate scaled distance
+    FLOAT_TYPE ret_val = -0.1;
+    return ret_val;
+}
