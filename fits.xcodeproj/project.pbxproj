@@ -7,7 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		990362DF1D3FA23900AECE5A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362DE1D3FA23900AECE5A /* main.cpp */; };
+		990363091D3FA2B900AECE5A /* clsCMulatorABC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362E51D3FA2B900AECE5A /* clsCMulatorABC.cpp */; };
+		9903630A1D3FA2B900AECE5A /* clsFieldRange.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362E71D3FA2B900AECE5A /* clsFieldRange.cpp */; };
+		9903630C1D3FA2B900AECE5A /* CMulator_GetSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362EC1D3FA2B900AECE5A /* CMulator_GetSet.cpp */; };
+		9903630D1D3FA2B900AECE5A /* CMulator_IO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362ED1D3FA2B900AECE5A /* CMulator_IO.cpp */; };
+		9903630E1D3FA2B900AECE5A /* CMulator_Constructors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362EE1D3FA2B900AECE5A /* CMulator_Constructors.cpp */; };
+		9903630F1D3FA2B900AECE5A /* CMulatorMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362F01D3FA2B900AECE5A /* CMulatorMain.cpp */; };
+		990363101D3FA2B900AECE5A /* CMulatorToolbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 990362F11D3FA2B900AECE5A /* CMulatorToolbox.cpp */; };
+		9937BEB81DDCF20C00FD514D /* ActualDataFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9937BEB61DDCF20C00FD514D /* ActualDataFile.cpp */; };
+		9937BEBA1DDCF59400FD514D /* ActualDataFile_Entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9937BEB91DDCF59400FD514D /* ActualDataFile_Entry.cpp */; };
+		9937BEBC1DDD995400FD514D /* clsCMulatorABC_Mutrate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9937BEBB1DDD995400FD514D /* clsCMulatorABC_Mutrate.cpp */; };
+		998B13921E52EFB8009EB9A8 /* clsCMulatorABC_PostProcessing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 998B13911E52EFB8009EB9A8 /* clsCMulatorABC_PostProcessing.cpp */; };
+		99A0A89E1DA61C2900B5FD89 /* clsCMulatorABC_Fitness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99A0A89D1DA61C2900B5FD89 /* clsCMulatorABC_Fitness.cpp */; };
+		99A0A8A01DA6221700B5FD89 /* clsCMulatorABC_Graveyard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99A0A89F1DA6221700B5FD89 /* clsCMulatorABC_Graveyard.cpp */; };
+		99A0A8A21DA623EA00B5FD89 /* clsFieldRange_Graveyard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99A0A8A11DA623EA00B5FD89 /* clsFieldRange_Graveyard.cpp */; };
+		99A0A8A51DAA0F7A00B5FD89 /* ZParams.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99A0A8A31DAA0F7A00B5FD89 /* ZParams.cpp */; };
+		99B5B3111DB7BD0C0028BAE5 /* CMulator_Graveyard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99B5B3101DB7BD0C0028BAE5 /* CMulator_Graveyard.cpp */; };
+		99F5A9311DDA48B300DEE72D /* PriorSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A92F1DDA48B300DEE72D /* PriorSampler.cpp */; };
+		99F5A9331DDAF81600DEE72D /* CMulator_Core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A9321DDAF81600DEE72D /* CMulator_Core.cpp */; };
+		99F5A9351DDAF8AE00DEE72D /* CMulator_Initialization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A9341DDAF8AE00DEE72D /* CMulator_Initialization.cpp */; };
+		99F5A9371DDAF91400DEE72D /* CMulator_Utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A9361DDAF91400DEE72D /* CMulator_Utilities.cpp */; };
+		99F5A93D1DDB06B000DEE72D /* SimulationResult.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A93B1DDB06B000DEE72D /* SimulationResult.cpp */; };
+		99F5A93F1DDB9D6F00DEE72D /* clsCMulatorABC_Popsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A93E1DDB9D6F00DEE72D /* clsCMulatorABC_Popsize.cpp */; };
+		99F5A9461DDC73D900DEE72D /* CMulatorToolbox_Report.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A9451DDC73D900DEE72D /* CMulatorToolbox_Report.cpp */; };
+		99F5A94B1DDC92B900DEE72D /* ResultsStats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A9491DDC92B900DEE72D /* ResultsStats.cpp */; };
+		99F5A94D1DDC990800DEE72D /* ResultsStats_Fitness.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A94C1DDC990800DEE72D /* ResultsStats_Fitness.cpp */; };
+		99F5A94F1DDC996B00DEE72D /* ResultsStats_PopulationSize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A94E1DDC996B00DEE72D /* ResultsStats_PopulationSize.cpp */; };
+		99F5A9511DDCD2FE00DEE72D /* ResultsStats_MutRate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99F5A9501DDCD2FE00DEE72D /* ResultsStats_MutRate.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +50,43 @@
 
 /* Begin PBXFileReference section */
 		990362DB1D3FA23900AECE5A /* fits */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fits; sourceTree = BUILT_PRODUCTS_DIR; };
-		990362DE1D3FA23900AECE5A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		990362E51D3FA2B900AECE5A /* clsCMulatorABC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsCMulatorABC.cpp; sourceTree = "<group>"; };
+		990362E61D3FA2B900AECE5A /* clsCMulatorABC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = clsCMulatorABC.h; sourceTree = "<group>"; };
+		990362E71D3FA2B900AECE5A /* clsFieldRange.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsFieldRange.cpp; sourceTree = "<group>"; };
+		990362E81D3FA2B900AECE5A /* clsFieldRange.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = clsFieldRange.hpp; sourceTree = "<group>"; };
+		990362EC1D3FA2B900AECE5A /* CMulator_GetSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulator_GetSet.cpp; sourceTree = "<group>"; };
+		990362ED1D3FA2B900AECE5A /* CMulator_IO.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulator_IO.cpp; sourceTree = "<group>"; };
+		990362EE1D3FA2B900AECE5A /* CMulator_Constructors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulator_Constructors.cpp; sourceTree = "<group>"; };
+		990362EF1D3FA2B900AECE5A /* CMulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CMulator.h; sourceTree = "<group>"; };
+		990362F01D3FA2B900AECE5A /* CMulatorMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulatorMain.cpp; sourceTree = "<group>"; };
+		990362F11D3FA2B900AECE5A /* CMulatorToolbox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulatorToolbox.cpp; sourceTree = "<group>"; };
+		990362F21D3FA2B900AECE5A /* CMulatorToolbox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CMulatorToolbox.hpp; sourceTree = "<group>"; };
+		9937BEB61DDCF20C00FD514D /* ActualDataFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ActualDataFile.cpp; sourceTree = "<group>"; };
+		9937BEB71DDCF20C00FD514D /* ActualDataFile.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ActualDataFile.hpp; sourceTree = "<group>"; };
+		9937BEB91DDCF59400FD514D /* ActualDataFile_Entry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ActualDataFile_Entry.cpp; sourceTree = "<group>"; };
+		9937BEBB1DDD995400FD514D /* clsCMulatorABC_Mutrate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsCMulatorABC_Mutrate.cpp; sourceTree = "<group>"; };
+		998B13911E52EFB8009EB9A8 /* clsCMulatorABC_PostProcessing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsCMulatorABC_PostProcessing.cpp; sourceTree = "<group>"; };
+		99A0A89D1DA61C2900B5FD89 /* clsCMulatorABC_Fitness.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsCMulatorABC_Fitness.cpp; sourceTree = "<group>"; };
+		99A0A89F1DA6221700B5FD89 /* clsCMulatorABC_Graveyard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsCMulatorABC_Graveyard.cpp; sourceTree = "<group>"; };
+		99A0A8A11DA623EA00B5FD89 /* clsFieldRange_Graveyard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsFieldRange_Graveyard.cpp; sourceTree = "<group>"; };
+		99A0A8A31DAA0F7A00B5FD89 /* ZParams.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ZParams.cpp; sourceTree = "<group>"; };
+		99A0A8A41DAA0F7A00B5FD89 /* ZParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZParams.h; sourceTree = "<group>"; };
+		99B5B3101DB7BD0C0028BAE5 /* CMulator_Graveyard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulator_Graveyard.cpp; sourceTree = "<group>"; };
+		99E6600D1D74588F0071F571 /* VersionHistory.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = VersionHistory.txt; sourceTree = "<group>"; };
+		99F5A92F1DDA48B300DEE72D /* PriorSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PriorSampler.cpp; sourceTree = "<group>"; };
+		99F5A9301DDA48B300DEE72D /* PriorSampler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = PriorSampler.hpp; sourceTree = "<group>"; };
+		99F5A9321DDAF81600DEE72D /* CMulator_Core.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulator_Core.cpp; sourceTree = "<group>"; };
+		99F5A9341DDAF8AE00DEE72D /* CMulator_Initialization.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulator_Initialization.cpp; sourceTree = "<group>"; };
+		99F5A9361DDAF91400DEE72D /* CMulator_Utilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulator_Utilities.cpp; sourceTree = "<group>"; };
+		99F5A93B1DDB06B000DEE72D /* SimulationResult.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationResult.cpp; sourceTree = "<group>"; };
+		99F5A93C1DDB06B000DEE72D /* SimulationResult.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SimulationResult.hpp; sourceTree = "<group>"; };
+		99F5A93E1DDB9D6F00DEE72D /* clsCMulatorABC_Popsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clsCMulatorABC_Popsize.cpp; sourceTree = "<group>"; };
+		99F5A9451DDC73D900DEE72D /* CMulatorToolbox_Report.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMulatorToolbox_Report.cpp; sourceTree = "<group>"; };
+		99F5A9491DDC92B900DEE72D /* ResultsStats.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ResultsStats.cpp; sourceTree = "<group>"; };
+		99F5A94A1DDC92B900DEE72D /* ResultsStats.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ResultsStats.hpp; sourceTree = "<group>"; };
+		99F5A94C1DDC990800DEE72D /* ResultsStats_Fitness.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ResultsStats_Fitness.cpp; sourceTree = "<group>"; };
+		99F5A94E1DDC996B00DEE72D /* ResultsStats_PopulationSize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ResultsStats_PopulationSize.cpp; sourceTree = "<group>"; };
+		99F5A9501DDCD2FE00DEE72D /* ResultsStats_MutRate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ResultsStats_MutRate.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +119,43 @@
 		990362DD1D3FA23900AECE5A /* fits */ = {
 			isa = PBXGroup;
 			children = (
-				990362DE1D3FA23900AECE5A /* main.cpp */,
+				9937BEB91DDCF59400FD514D /* ActualDataFile_Entry.cpp */,
+				9937BEB61DDCF20C00FD514D /* ActualDataFile.cpp */,
+				9937BEB71DDCF20C00FD514D /* ActualDataFile.hpp */,
+				99A0A89D1DA61C2900B5FD89 /* clsCMulatorABC_Fitness.cpp */,
+				99A0A89F1DA6221700B5FD89 /* clsCMulatorABC_Graveyard.cpp */,
+				9937BEBB1DDD995400FD514D /* clsCMulatorABC_Mutrate.cpp */,
+				99F5A93E1DDB9D6F00DEE72D /* clsCMulatorABC_Popsize.cpp */,
+				998B13911E52EFB8009EB9A8 /* clsCMulatorABC_PostProcessing.cpp */,
+				990362E51D3FA2B900AECE5A /* clsCMulatorABC.cpp */,
+				990362E61D3FA2B900AECE5A /* clsCMulatorABC.h */,
+				99A0A8A11DA623EA00B5FD89 /* clsFieldRange_Graveyard.cpp */,
+				990362E71D3FA2B900AECE5A /* clsFieldRange.cpp */,
+				990362E81D3FA2B900AECE5A /* clsFieldRange.hpp */,
+				990362EE1D3FA2B900AECE5A /* CMulator_Constructors.cpp */,
+				99F5A9321DDAF81600DEE72D /* CMulator_Core.cpp */,
+				990362EC1D3FA2B900AECE5A /* CMulator_GetSet.cpp */,
+				99B5B3101DB7BD0C0028BAE5 /* CMulator_Graveyard.cpp */,
+				99F5A9341DDAF8AE00DEE72D /* CMulator_Initialization.cpp */,
+				990362ED1D3FA2B900AECE5A /* CMulator_IO.cpp */,
+				99F5A9361DDAF91400DEE72D /* CMulator_Utilities.cpp */,
+				990362EF1D3FA2B900AECE5A /* CMulator.h */,
+				990362F01D3FA2B900AECE5A /* CMulatorMain.cpp */,
+				99F5A9451DDC73D900DEE72D /* CMulatorToolbox_Report.cpp */,
+				990362F11D3FA2B900AECE5A /* CMulatorToolbox.cpp */,
+				990362F21D3FA2B900AECE5A /* CMulatorToolbox.hpp */,
+				99F5A92F1DDA48B300DEE72D /* PriorSampler.cpp */,
+				99F5A9301DDA48B300DEE72D /* PriorSampler.hpp */,
+				99F5A94C1DDC990800DEE72D /* ResultsStats_Fitness.cpp */,
+				99F5A9501DDCD2FE00DEE72D /* ResultsStats_MutRate.cpp */,
+				99F5A94E1DDC996B00DEE72D /* ResultsStats_PopulationSize.cpp */,
+				99F5A9491DDC92B900DEE72D /* ResultsStats.cpp */,
+				99F5A94A1DDC92B900DEE72D /* ResultsStats.hpp */,
+				99F5A93B1DDB06B000DEE72D /* SimulationResult.cpp */,
+				99F5A93C1DDB06B000DEE72D /* SimulationResult.hpp */,
+				99E6600D1D74588F0071F571 /* VersionHistory.txt */,
+				99A0A8A31DAA0F7A00B5FD89 /* ZParams.cpp */,
+				99A0A8A41DAA0F7A00B5FD89 /* ZParams.h */,
 			);
 			path = fits;
 			sourceTree = "<group>";
@@ -88,7 +186,7 @@
 		990362D31D3FA23900AECE5A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Stern Lab";
 				TargetAttributes = {
 					990362DA1D3FA23900AECE5A = {
@@ -118,7 +216,33 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				990362DF1D3FA23900AECE5A /* main.cpp in Sources */,
+				99F5A9331DDAF81600DEE72D /* CMulator_Core.cpp in Sources */,
+				99A0A8A21DA623EA00B5FD89 /* clsFieldRange_Graveyard.cpp in Sources */,
+				9937BEBA1DDCF59400FD514D /* ActualDataFile_Entry.cpp in Sources */,
+				998B13921E52EFB8009EB9A8 /* clsCMulatorABC_PostProcessing.cpp in Sources */,
+				99F5A94B1DDC92B900DEE72D /* ResultsStats.cpp in Sources */,
+				99F5A93D1DDB06B000DEE72D /* SimulationResult.cpp in Sources */,
+				99A0A8A01DA6221700B5FD89 /* clsCMulatorABC_Graveyard.cpp in Sources */,
+				990363091D3FA2B900AECE5A /* clsCMulatorABC.cpp in Sources */,
+				99F5A9311DDA48B300DEE72D /* PriorSampler.cpp in Sources */,
+				9903630D1D3FA2B900AECE5A /* CMulator_IO.cpp in Sources */,
+				99F5A9511DDCD2FE00DEE72D /* ResultsStats_MutRate.cpp in Sources */,
+				990363101D3FA2B900AECE5A /* CMulatorToolbox.cpp in Sources */,
+				9903630E1D3FA2B900AECE5A /* CMulator_Constructors.cpp in Sources */,
+				99F5A9351DDAF8AE00DEE72D /* CMulator_Initialization.cpp in Sources */,
+				99F5A9461DDC73D900DEE72D /* CMulatorToolbox_Report.cpp in Sources */,
+				99F5A94D1DDC990800DEE72D /* ResultsStats_Fitness.cpp in Sources */,
+				9903630A1D3FA2B900AECE5A /* clsFieldRange.cpp in Sources */,
+				99A0A8A51DAA0F7A00B5FD89 /* ZParams.cpp in Sources */,
+				9903630F1D3FA2B900AECE5A /* CMulatorMain.cpp in Sources */,
+				99F5A9371DDAF91400DEE72D /* CMulator_Utilities.cpp in Sources */,
+				9903630C1D3FA2B900AECE5A /* CMulator_GetSet.cpp in Sources */,
+				99A0A89E1DA61C2900B5FD89 /* clsCMulatorABC_Fitness.cpp in Sources */,
+				9937BEBC1DDD995400FD514D /* clsCMulatorABC_Mutrate.cpp in Sources */,
+				99B5B3111DB7BD0C0028BAE5 /* CMulator_Graveyard.cpp in Sources */,
+				99F5A94F1DDC996B00DEE72D /* ResultsStats_PopulationSize.cpp in Sources */,
+				99F5A93F1DDB9D6F00DEE72D /* clsCMulatorABC_Popsize.cpp in Sources */,
+				9937BEB81DDCF20C00FD514D /* ActualDataFile.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,8 +263,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -162,6 +288,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -183,8 +310,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -194,12 +323,14 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -209,6 +340,10 @@
 		990362E31D3FA23900AECE5A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				HEADER_SEARCH_PATHS = /Users/talzinger/boost_1_61_0;
+				LIBRARY_SEARCH_PATHS = /Users/talzinger/boost_1_61_0/stage/lib;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -216,6 +351,10 @@
 		990362E41D3FA23900AECE5A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				HEADER_SEARCH_PATHS = /Users/talzinger/boost_1_61_0;
+				LIBRARY_SEARCH_PATHS = /Users/talzinger/boost_1_61_0/stage/lib;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -239,6 +378,7 @@
 				990362E41D3FA23900AECE5A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
