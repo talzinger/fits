@@ -1,9 +1,17 @@
+//
+//  clsCMulatorABC.hpp
+//
+//  Created by Tal Zinger
+//  Copyright (c) 2017 Tal Zinger. All rights reserved.
+//
+
 #ifndef clsCMulatorABC_hpp
 #define clsCMulatorABC_hpp
 
 #include <future>
 #include <vector>
 #include <chrono>
+#include <algorithm>
 
 // performance
 #include <boost/accumulators/accumulators.hpp>
@@ -12,26 +20,35 @@
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/odeint/util/ublas_wrapper.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 
 #include <cmath> //for pow
+#include <iomanip> // for put_time
+#include <string>
+#include <locale>
+
 #include "ZParams.h"
 #include "CMulator.h"
-#include "CMulatorToolbox.hpp"
-//#include "clsFieldRange.hpp"
+#include "fits_constants.h"
+
 #include "SimulationResult.hpp"
 #include "PriorSampler.hpp"
 #include "ActualDataFile.hpp"
 
 enum FactorToInfer {
-    Fitness, MutationRate, PopulationSize
+    Fitness, MutationRate, PopulationSize, Generations,
+    None // just to catch extreme cases
 };
+
 
 class clsCMulatorABC 
 {
 private:
+    
+    double _total_running_time;
     
     boost::mt19937 _boost_gen;
     
@@ -46,7 +63,7 @@ private:
     unsigned int _num_alleles;
     
 	FLOAT_TYPE _rejection_threshold;
-    bool _use_rejection_threshold; // immediately reject simulations, don't store
+    bool _use_rejection_threshold; 
     
     ZParams _zparams;
     
@@ -63,17 +80,24 @@ private:
 
     
     // stores samples from the prior
-    std::vector< std::vector<FLOAT_TYPE> > _prior_archive;
+    std::vector< std::vector<FLOAT_TYPE> > _float_prior_archive;
+    std::vector< std::vector<int> > _int_prior_archive;
     
 public:
     
     clsCMulatorABC( ZParams sim_params, ActualDataFile actual_data_file );
 
+    FLOAT_TYPE GetMedian( std::vector<FLOAT_TYPE> vec );
+    
     std::vector<int> GetUniqueIndexSet( int num_items );
 
+    double GetTotalRunningTime() { return _total_running_time; }
+    
     FLOAT_TYPE ResetRejectionThreshold();
 	FLOAT_TYPE SetRejectionThreshold(FLOAT_TYPE new_threshold);
 	FLOAT_TYPE GetRejectionThreshold();
+    
+    std::size_t GetNumberOfKeptResults();
     
     void SetImmediateRejection(bool new_val);
 
@@ -85,20 +109,39 @@ public:
     std::vector<SimulationResult> RunFitnessInferenceBatch( std::size_t num_simulations );
     std::vector<SimulationResult> RunPopulationSizeInferenceBatch( std::size_t num_simulations );
     std::vector<SimulationResult> RunMutationInferenceBatch( std::size_t num_simulations );
-    
+    std::vector<SimulationResult> RunGenerationInferenceBatch( std::size_t num_simulations );
+
     std::vector<FLOAT_TYPE> GetSDPerAllele( std::size_t start_idx, std::size_t end_idx );
     std::vector<FLOAT_TYPE> GetMADPerAllele( std::size_t start_idx, std::size_t end_idx );
     void DivideEachAllele( std::size_t start_idx, std::size_t end_idx, std::vector<FLOAT_TYPE> value_vector );
     
-    FLOAT_TYPE GetDistanceSimActual( MATRIX_TYPE actual_data, MATRIX_TYPE sim_data );
     
-    void ScaleSimulationResults();
-    void DoCoverageTest();
+    //void ScaleSimulationResults();
+    void CalculateResultsDistances( FLOAT_TYPE scaling_factor = 1.0f );
+    
+    std::vector< std::vector<FLOAT_TYPE>> GetPriorFloat();
+    std::vector< std::vector<int>> GetPriorInt();
+    
+    std::string GetPriorFloatAsString();
+    std::string GetPriorIntAsString();
     
     void DoCoverageCook();
-    std::vector<std::size_t> CoverageSingleDataset( std::size_t dataset_idx, std::size_t start_idx, std::size_t end_idx );
+    
+    std::pair<bool,FLOAT_TYPE> DoLevenesTest();
+    void DoCoverageTest();
+    
+    MATRIX_TYPE GetAlleleCoveragePvals() const;
+    // using unsigend int and not size_t to allow easier cast to float
+    std::vector<unsigned int> CoverageSingleDatasetFitness( std::size_t dataset_idx, std::size_t start_idx, std::size_t end_idx ) const;
     
     // std::vector<SimulationResult> RunGenerationInferenceBatch( std::size_t num_simulations );
+    
+    // TODO: make default with vector of 1.0 for scaling
+    FLOAT_TYPE GetDistanceSimActual( const MATRIX_TYPE &actual_data, const MATRIX_TYPE &sim_data, const std::vector<FLOAT_TYPE> &scaling_vector );
+    
+    void WriteStringToFile( std::string filename, std::string str );
+    
+    void WriteSimDataToFile( std::string filename, SimulationResult &res );
 };
 
 #endif

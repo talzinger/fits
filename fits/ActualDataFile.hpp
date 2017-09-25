@@ -15,13 +15,14 @@
 
 #include <boost/algorithm/string.hpp> // for splitting
 
+#include <boost/numeric/ublas/matrix.hpp>
+
 #include <boost/accumulators/numeric/functional.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/features.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/moment.hpp>
-#include <boost/accumulators/statistics/median.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/max.hpp>
 #include <boost/accumulators/statistics/min.hpp>
@@ -77,27 +78,36 @@ public:
     
     void LoadActualData( std::string filename );
     
-    std::size_t GetNumberOfAlleles();
+    int GetNumberOfAlleles();
+    int GetWTIndex();
     
-    std::vector<int> GetActualGenerations();
+    std::vector<int> GetActualGenerations(bool only_unique = true);
     std::vector<FLOAT_TYPE> GetActualFrequencies();
+    MATRIX_TYPE GetActualFreqsAsMatrix();
+    
     int GetFirstGeneration();
+    int GetLastGeneration();
+    
     std::vector<FLOAT_TYPE> GetInitFreqs();
     
-    std::vector<FLOAT_TYPE> GetSDPerAllele();
+    //std::vector<FLOAT_TYPE> GetSDPerAllele();
 
     // fields for actual data
+    const int ACTUAL_DATA_EMPTY_CELL = -1;
     const int ACTUAL_DATA_COLUMN_GENERATION = 0;
     const int ACTUAL_DATA_COLUMN_ALLELE = 1;
     const int ACTUAL_DATA_COLUMN_FREQ = 2;
-    const int ACTUAL_DATA_COLUMN_REF = 3;
-    const int ACTUAL_DATA_COLUMN_POS = 4;
-    const int ACTUAL_DATA_COLUMN_READS = 5;
     const int ACTUAL_DATA_COLUMNS = 3;
-    const int ACTUAL_DATA_EMPTY_CELL = -1;
 
 private:
     std::vector<ActualDataEntry> _actual_data;
+    
+    // to avoid searching the vector each and every
+    std::vector<int> _actual_generations;
+    std::vector<FLOAT_TYPE> _actual_frequencies;
+    std::vector<FLOAT_TYPE> _init_frequencies;
+    int _wt_index;
+    int _num_alleles;
 };
 
 #endif /* ActualDataFile_hpp */

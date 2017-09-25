@@ -18,12 +18,16 @@ void CMulator::Reset_Soft()
         throw " Reset soft: number of alleles changed unexpectedly, consider hard reset.";
     }
     
+    // resize the data matrix
+    _all_simulated_data.resize( _num_generations+1, _num_alleles );
+    _observed_simulated_data.resize( _num_generations+1, _num_alleles );
     
     // for consistency, update initial frequencies
     for (auto j=0; j<_num_alleles; j++ ) {
         
-        _sim_data[0][j] = _allele_init_freqs[j];
-        _sim_data_matrix(0,j) = _allele_init_freqs[j];
+        //_sim_data[0][j] = _allele_init_freqs[j];
+        _all_simulated_data(0,j) = _allele_init_freqs[j];
+        _observed_simulated_data(0,j) = _allele_init_freqs[j];
     }
     
     // now zero all others
@@ -31,8 +35,9 @@ void CMulator::Reset_Soft()
         
         for (auto j=0; j<_num_alleles; j++ ) {
             
-            _sim_data[i][j] = 0;
-            _sim_data_matrix(i,j) = 0.0f;
+            //_sim_data[i][j] = 0;
+            _all_simulated_data(i,j) = 0.0f;
+            _observed_simulated_data(i,j) = 0.0f;
         }
     }
     

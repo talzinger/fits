@@ -8,12 +8,10 @@
 
 // #define DEBUG_VERBOSE
 
-//#include <stdio.h>
 #include <iostream>
 #include <fstream>
 
 #include "CMulator.h"
-//#include "numR.h"
 
 
 MATRIX_TYPE CMulator::GetAllOutputAsMatrix() const
@@ -24,7 +22,14 @@ MATRIX_TYPE CMulator::GetAllOutputAsMatrix() const
         
         for ( auto allele=0; allele<_num_alleles; ++allele ) {
             
-            tmp_matrix(gen,allele) = _sim_data[gen][allele];
+            //tmp_matrix(gen,allele) = _sim_data[gen][allele];
+            
+            if (_use_observed_data) {
+                tmp_matrix(gen,allele) = _observed_simulated_data(gen,allele);
+            }
+            else {
+                tmp_matrix(gen,allele) = _all_simulated_data(gen,allele);
+            }
         }
     }
     
@@ -32,72 +37,42 @@ MATRIX_TYPE CMulator::GetAllOutputAsMatrix() const
 }
 
 
-std::string CMulator::GetAllOutputAsCSV() const
+MATRIX_TYPE CMulator::GetAllOutputAsMatrix( std::vector<int> actual_generations ) const
 {
-	if (!_initialized_with_parameters) {
-		throw " GetAllOutputAsCSV: object not initialized with parameters.";
-	}
-	
-    std::string tmp_str = "";
-	if (_current_generation==0) {
-		return tmp_str;
-	}
-	
-	// header 
-	for (int myAllele=0; myAllele<_num_alleles; myAllele++) {
-		tmp_str +=  "Allele " + std::to_string(myAllele) + ",";
-	}
-	
-	tmp_str += "\n";
-	
-	
-	if (_current_generation>1) {
-		
-		for (auto myGeneration=0; myGeneration<_current_generation; myGeneration++) {
-			
-			for (auto myAllele=0; myAllele<_num_alleles; myAllele++) {
-				
-				tmp_str += std::to_string(_sim_data[myGeneration][myAllele]) + ",";
-			}
-			
-			tmp_str += "\n";
-		}
-	}
-	
-	return tmp_str;	
+    auto rows_to_return = actual_generations.size();
+    
+    MATRIX_TYPE tmp_matrix(rows_to_return, _num_alleles);
+    
+    for ( auto gen_idx=0; gen_idx<actual_generations.size(); ++gen_idx ) {
+        
+        auto shifted_gen = actual_generations[gen_idx] - _generation_shift;
+        
+        for ( auto allele=0; allele<_num_alleles; ++allele ) {
+            
+            /*
+            std::cout << " output matrix generation "
+            << actual_generations[gen_idx]
+            << " shifted is " << shifted_gen
+            << " value is " << _all_simulated_data(shifted_gen,allele)
+            << std::endl;
+            */
+            
+            //tmp_matrix(gen_idx,allele) = _sim_data[shifted_gen][allele];
+            
+            if (_use_observed_data) {
+                tmp_matrix(gen_idx,allele) = _observed_simulated_data( shifted_gen, allele );
+            }
+            else {
+                tmp_matrix(gen_idx,allele) = _all_simulated_data( shifted_gen, allele );
+            }
+        }
+    }
+    
+    return tmp_matrix;
 }
 
 
-/*
-void CMulator::ReadParametersFromFile( std::string param_filename )
-{
-    ZParams my_zparams;
-    
-    try {
-        // parameters should be read only
-        std::cout << "Reading parameters file: " << param_filename << std::endl;
-        my_zparams.ReadParameters(param_filename, true);
-    }
-    catch( const char* txt ) {
-        std::cerr << "Error in zparams: " << txt << std::endl;
-    }
-    catch (...) {
-        std::cerr << "Error while reading parameter file: " << param_filename << std::endl;
-    }
-	
-    if (!my_zparams.IsEmpty()) {
-        std::cout << "Zparams:" << std::endl;
-        std::cout << my_zparams.GetAllParameters() << std::endl;
-    }
-    
-    _initialized_with_parameters = true;
-    
-    InitMemberVariables(my_zparams);
-}
-*/
-
-
-std::string CMulator::GetAllOutputAsText(bool header) const
+std::string CMulator::GetAllOutputAsText(bool header, std::string delimiter) const
 {
 	if (!_initialized_with_parameters) {
 		throw " GetAllOutputAsText: object not initialized with parameters.";
@@ -111,7 +86,7 @@ std::string CMulator::GetAllOutputAsText(bool header) const
 	// header
     if (header) {
         for (auto myAllele=0; myAllele<_num_alleles; myAllele++) {
-            tmp_str +=  "allele" + std::to_string(myAllele) + "\t";
+            tmp_str +=  "allele" + std::to_string(myAllele) + delimiter;
         }
         tmp_str += "\n";
     }
@@ -122,7 +97,15 @@ std::string CMulator::GetAllOutputAsText(bool header) const
 			
 			for (auto myAllele=0; myAllele<_num_alleles; myAllele++) {
 				
-				tmp_str += std::to_string(_sim_data[myGeneration][myAllele]) + "\t";
+				// tmp_str += std::to_string(_sim_data[myGeneration][myAllele]) + "\t";
+                
+                if (_use_observed_data) {
+                    tmp_str += std::to_string( _observed_simulated_data( myGeneration, myAllele)) + "\t";
+                }
+                else {
+                    tmp_str += std::to_string( _all_simulated_data( myGeneration, myAllele)) + "\t";
+                }
+                
 			}
 			
 			tmp_str += "\n";
@@ -131,6 +114,7 @@ std::string CMulator::GetAllOutputAsText(bool header) const
 	
 	return tmp_str;
 }
+
 
 std::string CMulator::GetAllOutputAsTextForR( bool header ) const
 {
@@ -156,7 +140,8 @@ std::string CMulator::GetAllOutputAsTextForR( bool header ) const
                 
                 tmp_str += std::to_string(myGeneration) + "\t";
                 tmp_str += std::to_string(myAllele) + "\t";
-                tmp_str += std::to_string(_sim_data[myGeneration][myAllele]) + "\n";
+                //tmp_str += std::to_string(_sim_data[myGeneration][myAllele]) + "\n";
+                tmp_str += std::to_string( _all_simulated_data(myGeneration,myAllele) ) + "\n";
             }
         }
     }

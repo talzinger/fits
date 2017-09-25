@@ -12,7 +12,7 @@
 /*
  std::string sim_id;
  FLOAT_TYPE distance_from_actual;
- std::vector<FLOAT_TYPE> individual_distance;
+ 
  std::vector<FLOAT_TYPE> fitness_values;
  
  MATRIX_TYPE mutation_rates;
@@ -27,44 +27,48 @@
 
 
 SimulationResult::SimulationResult()
-: sim_id(""),
-distance_from_actual(-1.0),
-fitness_values(),
-raw_data(),
+: N(0),
 wt_index(-1),
-individual_distance(),
-N(0),
-mutation_rates(),
+sim_id(""),
+distance_from_actual(-1.0),
+actual_generations(),
+generation_shift(0),
 prior_sample_index(0),
-sim_data_matrix()
+fitness_values(),
+sim_data_matrix(),
+mutation_rates(),
+generation_interval(0),
+num_generations(0)
 {}
 
-
+/*
 SimulationResult::SimulationResult(std::string id, FLOAT_TYPE distance)
 : sim_id(id),
 distance_from_actual(distance),
 fitness_values(),
-raw_data(),
 wt_index(-1),
-individual_distance(),
 N(0),
 mutation_rates(),
 prior_sample_index(0),
-sim_data_matrix()
+sim_data_matrix(),
+generation_shift(0),
+actual_generations()
 {}
-
+*/
 
 SimulationResult::SimulationResult(const SimulationResult &original)
-: sim_id(original.sim_id),
-distance_from_actual(original.distance_from_actual),
-fitness_values(original.fitness_values),
-raw_data(original.raw_data),
+: N(original.N),
 wt_index(original.wt_index),
-individual_distance(original.individual_distance),
-N(original.N),
-mutation_rates(original.mutation_rates),
+sim_id(original.sim_id),
+distance_from_actual(original.distance_from_actual),
+actual_generations(original.actual_generations),
+generation_shift(original.generation_shift),
 prior_sample_index(original.prior_sample_index),
-sim_data_matrix(original.sim_data_matrix)
+fitness_values(original.fitness_values),
+sim_data_matrix(original.sim_data_matrix),
+mutation_rates(original.mutation_rates),
+generation_interval(original.generation_interval),
+num_generations(original.num_generations)
 {}
 
 
@@ -72,34 +76,43 @@ SimulationResult::SimulationResult(const CMulator& sim_object)
 : sim_id(sim_object.GetSimUID()),
 distance_from_actual(-1.0f),
 fitness_values(sim_object.GetAlleleFitnessValues()),
-raw_data(sim_object.GetAllOutputAsText()),
 wt_index(sim_object.GetWTAllele()),
-individual_distance(sim_object.GetAlleleNumber(), -1.0f),
 N(sim_object.GetPopulationSize()),
 mutation_rates(sim_object.GetMutationRateMatrix()),
 prior_sample_index(0),
-sim_data_matrix(sim_object.GetAllOutputAsMatrix())
+sim_data_matrix(sim_object.GetAllOutputAsMatrix()),
+generation_shift(sim_object.GetGenerationShift()),
+actual_generations(),
+num_generations(sim_object.GetNumOfGenerations())
+{}
+
+SimulationResult::SimulationResult(const CMulator& sim_object, std::vector<int> actual_gens)
+: sim_id(sim_object.GetSimUID()),
+distance_from_actual(-1.0f),
+fitness_values(sim_object.GetAlleleFitnessValues()),
+wt_index(sim_object.GetWTAllele()),
+N(sim_object.GetPopulationSize()),
+mutation_rates(sim_object.GetMutationRateMatrix()),
+prior_sample_index(0),
+generation_shift(sim_object.GetGenerationShift()),
+actual_generations(actual_gens),
+num_generations(sim_object.GetNumOfGenerations())
 {
+    if ( actual_generations.empty() ) {
+        std::cerr << "Actual Generation list is empty" << std::endl;
+        throw "Actual Generation list is empty";
+    }
+    
+    sim_data_matrix = sim_object.GetAllOutputAsMatrix( actual_generations );
 }
+
 
 
 // move constructor
 // creates a minimal object that will be destructed with minimal effort
 SimulationResult::SimulationResult( SimulationResult&& other ) noexcept
 {
-    // simple data types
-    std::swap(N, other.N);
-    std::swap(wt_index, other.wt_index);
-    std::swap(distance_from_actual, other.distance_from_actual);
-    std::swap(prior_sample_index, other.prior_sample_index);
-    
-    // complex, use swap
-    sim_id.swap(other.sim_id);
-    raw_data.swap(other.raw_data);
-    fitness_values.swap(other.fitness_values);
-    individual_distance.swap(other.individual_distance);
-    mutation_rates.swap(other.mutation_rates);
-    sim_data_matrix.swap(other.sim_data_matrix);
+    swap(other);
 }
 
 
@@ -107,102 +120,70 @@ SimulationResult::SimulationResult( SimulationResult&& other ) noexcept
 // the less-than is the only one used for comparisons
 bool SimulationResult::operator<(const SimulationResult& result) const
 {
-    
-    // 2016-10-25 try to take individual allleles into account
-    
-    // old version
-    /*
-     if ( individual_distance.empty() || result.individual_distance.empty()) {
-     std::cout << "OLD Comparison" << ( individual_distance.empty() ? "1" : " " )
-     << ( result.individual_distance.empty() ? "2" : " " ) << std::endl;
-     return distance_from_actual < result.distance_from_actual;
-     }
-     
-     if ( individual_distance.size() != result.individual_distance.size() ) {
-     return distance_from_actual < result.distance_from_actual;
-     }
-     
-     // skip calculations if possible
-     if ( distance_from_actual >= result.distance_from_actual ) {
-     return false;
-     }
-     
-     // more strict that simply sum of distances
-     auto all_alleles_shorter_distance = true;
-     for ( auto i=0; i<individual_distance.size(); ++i ) {
-     all_alleles_shorter_distance = all_alleles_shorter_distance &&
-     ( individual_distance[i] <= result.individual_distance[i] );
-     }
-     
-     return all_alleles_shorter_distance;
-     */
-    
     return distance_from_actual < result.distance_from_actual;
 }
 
-/*
- bool CMulatorToolbox::SimulationResult::operator>(const SimulationResult& result) const
- {
-	return distance_from_actual > result.distance_from_actual;
- }
- 
- bool CMulatorToolbox::SimulationResult::operator==(const SimulationResult& result) const
- {
-	return distance_from_actual == result.distance_from_actual;
- }
- */
 
 // Swap functions
 void SimulationResult::swap( SimulationResult& other )
 {
-    //auto tmp_distance = distance_from_actual;
-    //distance_from_actual = other.distance_from_actual;
-    //other.distance_from_actual = tmp_distance;
-    
-    
-    // simple data
     std::swap(N, other.N);
     std::swap(wt_index, other.wt_index);
-    std::swap(distance_from_actual, other.distance_from_actual);
-    std::swap(prior_sample_index, other.prior_sample_index);
-    
-    // complex data types
     sim_id.swap(other.sim_id);
+    std::swap(distance_from_actual, other.distance_from_actual);
+    actual_generations.swap(other.actual_generations);
+    std::swap(generation_shift, other.generation_shift);
+    
+    std::swap(prior_sample_index, other.prior_sample_index);
+
     fitness_values.swap(other.fitness_values);
-    raw_data.swap(other.raw_data);
-    individual_distance.swap(other.individual_distance);
-    mutation_rates.swap(other.mutation_rates);
     sim_data_matrix.swap(other.sim_data_matrix);
+    mutation_rates.swap(other.mutation_rates);
+    
+    std::swap(generation_interval, other.generation_interval);
+    std::swap(num_generations, other.num_generations);
 }
 
 
 void SimulationResult::swap(SimulationResult& res1, SimulationResult& res2)
 {
+    std::cerr << std::endl << " Swap with references is used but not implemented!" << std::endl;
+    throw " Swap with references is used but not implemented!";
+    
+    /*
     std::swap(res1.N, res2.N);
     std::swap(res1.wt_index, res2.wt_index);
     std::swap(res1.distance_from_actual, res2.distance_from_actual);
     std::swap(res1.prior_sample_index, res2.prior_sample_index );
+    std::swap(res1.generation_shift, res2.generation_shift );
+    
     
     res1.sim_id.swap(res2.sim_id);
-    res1.raw_data.swap(res2.raw_data);
     res1.fitness_values.swap(res2.fitness_values);
-    res1.individual_distance.swap(res2.individual_distance);
     res1.sim_data_matrix.swap(res2.sim_data_matrix);
+    res1.actual_generations.swap(res2.actual_generations);
+     */
 }
 
 
 void SimulationResult::swap(SimulationResult *res1, SimulationResult *res2)
 {
+    std::cerr << std::endl << " Swap *res is used but not implemented!" << std::endl;
+    throw " Swap *res is used but not implemented!";
+    
+    /*
     std::swap(res1->N, res2->N);
     std::swap(res1->wt_index, res2->wt_index);
     std::swap(res1->distance_from_actual, res2->distance_from_actual);
     std::swap(res1->prior_sample_index, res2->prior_sample_index );
+    std::swap(res1->generation_shift, res2->generation_shift );
+    
     
     res1->sim_id.swap(res2->sim_id);
-    res1->raw_data.swap(res2->raw_data);
     res1->fitness_values.swap(res2->fitness_values);
-    res1->individual_distance.swap(res2->individual_distance);
     res1->sim_data_matrix.swap(res2->sim_data_matrix);
+    res1->actual_generations.swap(res2->actual_generations);
+     */
 }
 
 
@@ -230,7 +211,7 @@ std::vector<FLOAT_TYPE> SimulationResult::GetSDForEachAllele()
         boost::accumulators::accumulator_set<
         FLOAT_TYPE,
         boost::accumulators::stats<
-        boost::accumulators::tag::median,
+        //boost::accumulators::tag::median,
         boost::accumulators::tag::variance,
         boost::accumulators::tag::mean,
         boost::accumulators::tag::min,
@@ -253,12 +234,4 @@ std::vector<FLOAT_TYPE> SimulationResult::GetSDForEachAllele()
     return allele_sd_vec;
 }
 
-void SimulationResult::DivideEachAllele( std::vector<FLOAT_TYPE> value_vector )
-{
-    for ( auto current_allele=0; current_allele<sim_data_matrix.size2(); ++current_allele ) {
-        
-        boost::numeric::ublas::matrix_column<MATRIX_TYPE> current_col( sim_data_matrix, current_allele );
-        current_col = current_col / value_vector[current_allele];
-    }
-    
-}
+

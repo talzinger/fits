@@ -25,8 +25,6 @@ std::vector<int> clsCMulatorABC::GetUniqueIndexSet( int num_items )
             
             //std::cout << chosen_index << std::endl;
         }
-        
-        
     }
     
     std::vector<int> return_vec(num_items, 0);
@@ -42,6 +40,58 @@ std::vector<int> clsCMulatorABC::GetUniqueIndexSet( int num_items )
     
 }
 
+// Calculate Median Absolute Deviation (MAD)
+// This is used for scaling frequencies
+std::vector<FLOAT_TYPE> clsCMulatorABC::GetMADPerAllele( std::size_t start_idx, std::size_t end_idx )
+{
+    
+    // gather all frequencies per allele
+    std::vector< std::vector<FLOAT_TYPE> > allele_freq_storage( _num_alleles );
+    
+    for ( auto current_idx=start_idx; current_idx<end_idx; ++current_idx ) {
+        
+        for ( auto current_allele=0; current_allele<_num_alleles; ++current_allele ) {
+            
+            boost::numeric::ublas::matrix_column<MATRIX_TYPE> current_col( _simulation_result_vector[current_idx].sim_data_matrix, current_allele );
+            
+            for ( auto current_freq : current_col ) {
+                allele_freq_storage[current_allele].push_back(current_freq);
+            }
+        }
+    }
+    
+    
+    // calculate median per allele
+    std::vector<FLOAT_TYPE> allele_median_vec( _num_alleles, 0.0f);
+    
+    for ( auto current_allele=0; current_allele<allele_freq_storage.size(); ++current_allele ) {
+        allele_median_vec[current_allele] = GetMedian( allele_freq_storage[current_allele] );
+    }
+    
+    
+    // gather all distances per allele
+    std::vector< std::vector<FLOAT_TYPE> > allele_distance_vec( _num_alleles );
+    
+    for ( auto current_allele=0; current_allele<allele_distance_vec.size(); ++current_allele ) {
+        for ( auto val : allele_freq_storage[current_allele] ) {
+            allele_distance_vec[current_allele].push_back( std::fabs(val - allele_median_vec[current_allele] ) );
+        }
+    }
+    
+    
+    // calculate median distance
+    std::vector<FLOAT_TYPE> allele_mad_vec( _num_alleles, 0.0f);
+    
+    for ( auto current_allele=0; current_allele<allele_freq_storage.size(); ++current_allele ) {
+        allele_mad_vec[current_allele] = GetMedian( allele_distance_vec[current_allele] );
+    }
+    
+    
+    return allele_mad_vec;
+}
+
+
+
 std::vector<FLOAT_TYPE> clsCMulatorABC::GetSDPerAllele( std::size_t start_idx, std::size_t end_idx )
 {
     
@@ -50,7 +100,6 @@ std::vector<FLOAT_TYPE> clsCMulatorABC::GetSDPerAllele( std::size_t start_idx, s
     std::vector< boost::accumulators::accumulator_set<
     FLOAT_TYPE,
     boost::accumulators::stats<
-    boost::accumulators::tag::median,
     boost::accumulators::tag::variance,
     boost::accumulators::tag::mean,
     boost::accumulators::tag::min,
@@ -78,108 +127,79 @@ std::vector<FLOAT_TYPE> clsCMulatorABC::GetSDPerAllele( std::size_t start_idx, s
     return allele_sd_vec;
 }
 
-// Calculate Median Absolute Deviation (MAD)
-std::vector<FLOAT_TYPE> clsCMulatorABC::GetMADPerAllele( std::size_t start_idx, std::size_t end_idx )
+
+
+
+void clsCMulatorABC::DoCoverageTest()
 {
+}
+
+// column for each allele
+// assumes the first acceptance_count simulations are the pseudo-data
+// assumes the simulation result vector is sorted such that the best fitting are first
+/*
+MATRIX_TYPE clsCMulatorABC::GetAlleleCoveragePvals() const
+{
+    std::size_t acceptance_count = _zparams.GetFloat("_acceptance_rate", 0.01f) * _repeats;
     
-    std::vector<FLOAT_TYPE> allele_median_vec( _num_alleles, 0.0f);
-    std::vector<FLOAT_TYPE> allele_mad_vec( _num_alleles, 0.0f);
+    auto start_sim_idx = acceptance_count;
+    auto end_sim_idx = _simulation_result_vector.size();
     
-    std::vector< boost::accumulators::accumulator_set<
-    FLOAT_TYPE,
-    boost::accumulators::stats<
-    boost::accumulators::tag::median,
-    boost::accumulators::tag::variance,
-    boost::accumulators::tag::mean,
-    boost::accumulators::tag::min,
-    boost::accumulators::tag::max> > > allele_accumulator_vec;
+    MATRIX_TYPE allele_pvals_matrix(acceptance_count, _num_alleles);
     
-    std::vector< boost::accumulators::accumulator_set<
-    FLOAT_TYPE,
-    boost::accumulators::stats<
-    boost::accumulators::tag::median,
-    boost::accumulators::tag::variance,
-    boost::accumulators::tag::mean,
-    boost::accumulators::tag::min,
-    boost::accumulators::tag::max> > > distance_accumulator_vec;
+    std::vector<std::future<std::vector<unsigned int>>> future_vec (acceptance_count);
     
-    
-    // First, calculate the median
-    allele_accumulator_vec.resize(_num_alleles);
-    for ( auto current_idx=start_idx; current_idx<end_idx; ++current_idx ) {
+    for ( auto current_pseudo_dataset_idx=0;
+         current_pseudo_dataset_idx<acceptance_count;
+         ++current_pseudo_dataset_idx ) {
         
-        for ( auto current_allele=0; current_allele<_num_alleles; ++current_allele ) {
-            
-            boost::numeric::ublas::matrix_column<MATRIX_TYPE> current_col( _simulation_result_vector[current_idx].sim_data_matrix, current_allele );
-            
-            for ( auto current_freq : current_col ) {
-                allele_accumulator_vec[current_allele]( current_freq );
+        future_vec[current_pseudo_dataset_idx] =
+        std::async( &clsCMulatorABC::CoverageSingleDatasetFitness,
+                   this,
+                   current_pseudo_dataset_idx,
+                   start_sim_idx,
+                   end_sim_idx );
+    }
+    
+    for ( auto current_pseudo_dataset_idx=0;
+         current_pseudo_dataset_idx<acceptance_count;
+         ++current_pseudo_dataset_idx ) {
+
+        auto coverage_result_vec = future_vec[current_pseudo_dataset_idx].get();
+        boost::numeric::ublas::matrix_row<MATRIX_TYPE> current_row(allele_pvals_matrix, current_pseudo_dataset_idx);
+        
+        std::copy( current_row.begin(), current_row.end(), coverage_result_vec.begin() );
+    }
+    
+    return allele_pvals_matrix;
+}
+*/
+
+// for a given dataset, sum the number of results in which the inferred parameter value is smaller than the actual
+// parameter values used to generate the dataset
+// NOTE: assumes that pseudo-data sets are contiguous (e.g. first 100) and the reset of sims is contiguous
+std::vector<unsigned int>
+clsCMulatorABC::CoverageSingleDatasetFitness( std::size_t dataset_idx, std::size_t start_idx, std::size_t end_idx ) const
+{
+    std::vector<unsigned int> local_fitness_underestimate_count_vec(_num_alleles, 0);
+    
+    // process
+    for ( auto current_scaled_sim=start_idx; current_scaled_sim<end_idx; ++current_scaled_sim ) {
+        
+        for ( auto current_allele=0; current_allele<local_fitness_underestimate_count_vec.size(); ++current_allele ) {
+            if ( _simulation_result_vector[current_scaled_sim].fitness_values[current_allele] <
+                _simulation_result_vector[dataset_idx].fitness_values[current_allele] ) {
+                ++local_fitness_underestimate_count_vec[current_allele];
             }
         }
     }
     
-    // Store the allele medians
-    for (auto current_allele = 0; current_allele < _num_alleles; ++current_allele) {
-        allele_median_vec[current_allele] = boost::accumulators::median( allele_accumulator_vec[current_allele] );
-    }
-    
-    // Now, accumulate the distances of values from the median
-    distance_accumulator_vec.resize(_num_alleles);
-    for ( auto current_idx=start_idx; current_idx<end_idx; ++current_idx ) {
-        
-        for ( auto current_allele=0; current_allele<_num_alleles; ++current_allele ) {
-            
-            boost::numeric::ublas::matrix_column<MATRIX_TYPE> current_col( _simulation_result_vector[current_idx].sim_data_matrix, current_allele );
-            
-            for ( auto current_freq : current_col ) {
-                
-                auto current_allele_value = current_freq;
-                auto current_allele_median = allele_median_vec[current_allele];
-                
-                auto tmpval = std::fabs( current_allele_value - current_allele_median );
-                
-                distance_accumulator_vec[current_allele](tmpval);
-            }
-        }
-    }
-    
-    // Finally, return MAD for each allele
-    for (auto current_allele = 0; current_allele < _num_alleles; ++current_allele) {
-        allele_mad_vec[current_allele] = boost::accumulators::median( distance_accumulator_vec[current_allele] );
-    }
-    
-    return allele_mad_vec;
+    return local_fitness_underestimate_count_vec;
 }
 
-void clsCMulatorABC::DivideEachAllele( std::size_t start_idx, std::size_t end_idx, std::vector<FLOAT_TYPE> value_vector )
-{
-    
-    for ( auto current_idx=start_idx; current_idx<end_idx; ++current_idx ) {
-        
-        //std::cout << "before: " << _simulation_result_vector[current_idx].sim_data_matrix << std::endl;
-        
-        for ( auto current_allele=0; current_allele<_num_alleles; ++current_allele ) {
-            
-            boost::numeric::ublas::matrix_column<MATRIX_TYPE> current_col( _simulation_result_vector[current_idx].sim_data_matrix, current_allele );
-            
-            current_col = current_col / value_vector[current_allele];
-        }
-        //std::cout << "after: " <<_simulation_result_vector[current_idx].sim_data_matrix << std::endl;
-    }
-    
-}
 
-void clsCMulatorABC::ScaleSimulationResults()
-{
-    auto sd_vector = GetSDPerAllele(0, _simulation_result_vector.size());
-    
-    std::cout << "Whole vector sd values: ";
-    for ( auto tmpval : sd_vector ) { std::cout << "\t" << tmpval; }
-    std::cout << std::endl;
-    
-    DivideEachAllele(0, _simulation_result_vector.size(), sd_vector);
-}
-
+/*
+// 2017-03-07 Re-writing this
 void clsCMulatorABC::DoCoverageTest()
 {
     std::cout << "Coverage" << std::endl;
@@ -353,7 +373,9 @@ void clsCMulatorABC::DoCoverageTest()
     outfile.close();
     
 }
+*/
 
+/*
 void clsCMulatorABC::DoCoverageCook()
 {
     std::cout << "Coverage Cook" << std::endl;
@@ -413,15 +435,15 @@ void clsCMulatorABC::DoCoverageCook()
     
     
     // now process each of the pseudo-datasets
-    /*std::vector< std::future< std::vector<std::size_t> > > fut_vec(100);
-    for ( auto current_pseudo_dataset=0; current_pseudo_dataset<100; ++current_pseudo_dataset ) {
-        fut_vec[current_pseudo_dataset] = std::async( std::launch::async,
-                                                     &clsCMulatorABC::CoverageSingleDataset,
-                                                     this,
-                                                     current_pseudo_dataset,
-                                                     100,
-                                                     _simulation_result_vector.size() );
-    }*/
+    //std::vector< std::future< std::vector<std::size_t> > > fut_vec(100);
+    //for ( auto current_pseudo_dataset=0; current_pseudo_dataset<100; ++current_pseudo_dataset ) {
+     //   fut_vec[current_pseudo_dataset] = std::async( std::launch::async,
+      //                                               &clsCMulatorABC::CoverageSingleDataset,
+       //                                              this,
+        //                                             current_pseudo_dataset,
+         //                                            100,
+          //                                           _simulation_result_vector.size() );
+    //}
     
     for ( auto current_pseudo_dataset=0; current_pseudo_dataset<100; ++current_pseudo_dataset ) {
         
@@ -431,7 +453,7 @@ void clsCMulatorABC::DoCoverageCook()
         //fitness_underestimate_count_vec = fut_vec[current_pseudo_dataset].get();
         std::cout << "Got one." << std::endl;
         
-        fitness_underestimate_count_vec = CoverageSingleDataset( current_pseudo_dataset, 0, 100 );
+        fitness_underestimate_count_vec = CoverageSingleDatasetFitness( current_pseudo_dataset, 0, 100 );
         
         // this is the pval for the current dataset
         for ( auto current_allele=0; current_allele<fitness_underestimate_count_vec.size(); ++current_allele ) {
@@ -485,21 +507,4 @@ void clsCMulatorABC::DoCoverageCook()
     outfile.close();
     
 }
-
-std::vector<std::size_t> clsCMulatorABC::CoverageSingleDataset( std::size_t dataset_idx, std::size_t start_idx, std::size_t end_idx )
-{
-    std::vector<std::size_t> local_fitness_underestimate_count_vec(_num_alleles, 0);
-    
-    // process
-    for ( auto current_scaled_sim=start_idx; current_scaled_sim<end_idx; ++current_scaled_sim ) {
-        
-        for ( auto current_allele=0; current_allele<local_fitness_underestimate_count_vec.size(); ++current_allele ) {
-            if ( _simulation_result_vector[current_scaled_sim].fitness_values[current_allele] <
-                _simulation_result_vector[dataset_idx].fitness_values[current_allele] ) {
-                ++local_fitness_underestimate_count_vec[current_allele];
-            }
-        }
-    }
-
-    return local_fitness_underestimate_count_vec;
-}
+*/

@@ -24,6 +24,15 @@ _is_initialized(other._is_initialized),
 _read_only(other._read_only)
 {}
 
+void ZParams::Clear()
+{
+    if ( _read_only ) {
+        std::string err_msg = "ZParams: Read only. Cannot clear.";
+        throw err_msg.c_str();
+    }
+    
+    _param_map.clear();
+}
 
 void ZParams::ReadParameters( const std::string filename, bool ReadOnly = false )
 {
@@ -33,7 +42,7 @@ void ZParams::ReadParameters( const std::string filename, bool ReadOnly = false 
     
     if ( !f.is_open() ) {
         std::string err_msg = "ZParams: error while opening file " + filename + "\n";
-        throw err_msg;
+        throw err_msg.c_str();
     }
     
     
@@ -54,7 +63,7 @@ void ZParams::ReadParameters( const std::string filename, bool ReadOnly = false 
     
     if (f.bad()) {
         std::string err_msg = "ZParams: error while reading file " + filename + "\n";
-        throw err_msg;
+        throw err_msg.c_str();
     }
     
     _is_initialized = true;
@@ -73,7 +82,8 @@ _read_only(ReadOnly)
 void ZParams::AddParameter( const std::string paramName, const std::string value )
 {
     if ( _read_only && _is_initialized ) {
-        throw "ZParams: Read only. Cannot add parameters.";
+        std::string err_msg = "ZParams: Read only. Cannot add parameters.";
+        throw err_msg.c_str();
     }
     
     std::pair<std::string, std::string> tmp_pair(paramName, value);
@@ -82,9 +92,9 @@ void ZParams::AddParameter( const std::string paramName, const std::string value
         _param_map.insert( tmp_pair );
     }
     catch (...) {
-        std::cerr << "Error while adding parameter: " << paramName << std::endl;
-        
-        throw "Error while adding parameter";
+        std::string err_msg = "ZParams: Error while adding parameter ";
+        err_msg += paramName;
+        throw err_msg.c_str();
     }
 }
 
@@ -199,7 +209,9 @@ unsigned long ZParams::GetUnsignedLong(const std::string paramName, const unsign
 void ZParams::UpdateParameter( const std::string paramName, const std::string value )
 {
     if ( _read_only && _is_initialized ) {
-        throw "ZParams: Read only. Cannot update parameters.";
+        std::string err_msg = "ZParams: Read only. Cannot update parameters.";
+        err_msg += paramName;
+        throw err_msg.c_str();
     }
     
     try {
@@ -215,18 +227,21 @@ std::string ZParams::GetString(const std::string paramName) const
 {
     
     if (!_is_initialized) {
-        std::cerr << "ZParams uninitialized. Error while attempting to get " << paramName << std::endl;
-        throw "ZParams uninitialized. Error while attempting to get " + paramName;
+        std::string err_msg = "ZParams uninitialized. Error while attempting to get ";
+        err_msg += paramName;
+        throw err_msg.c_str();
     }
+    
     std::string retreived_value;
     
     // the original exception doesn't say what parameter is missing
     try {
         retreived_value = _param_map.at(paramName);
     }
-    catch (std::out_of_range ex) {
-        // std::cerr << "Invalid parameter: " << paramName << std::endl;
-        throw std::out_of_range("Invalid parameter: " + paramName);
+    catch (...) {
+        std::string err_msg = "ZParams: Error while attempting to get ";
+        err_msg += paramName;
+        throw err_msg.c_str();
     }
     
     return retreived_value;

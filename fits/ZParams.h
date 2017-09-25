@@ -29,7 +29,6 @@
 class ZParams {
     
 public:
-    
     ZParams();
     ZParams( std::string filename, bool ReadOnly );
     ZParams( const ZParams& other );
@@ -83,5 +82,6 @@ private:
     std::map<std::string, std::string> _param_map;
     bool _is_initialized;
     bool _read_only; // won't accept updates
+    
 };
 #endif /* ZParams_h */

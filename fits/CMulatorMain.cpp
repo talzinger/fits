@@ -8,6 +8,8 @@
 #include <fstream>
 #include <iomanip>
 
+#include <regex> // for printing only executable name
+
 #include <boost/format.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
@@ -18,22 +20,27 @@
 
 #include "CMulator.h"
 #include "clsCMulatorABC.h"
-#include "CMulatorToolbox.hpp"
+
 #include "PriorSampler.hpp"
 #include "SimulationResult.hpp"
 #include "ResultsStats.hpp"
 #include "ActualDataFile.hpp"
 
-
+#include "fits_constants.h"
 
 int InferABC( FactorToInfer factor,
                 std::string param_filename, std::string actual_data_filename,
-                std::string distrib_output_filename, std::string summary_output_filename )
+                std::string posterior_output_filename, std::string summary_output_filename,
+                std::string prior_output_filename )
 {
     std::cout << "Parameter file: " << param_filename << std::endl;
     std::cout << "Actual data file: " << actual_data_filename << std::endl;
-    std::cout << "Posterior distribution output: " << distrib_output_filename << std::endl;
-    std::cout << "Summary data output: " << summary_output_filename << std::endl;
+    std::cout << "Posterior distribution file: " << posterior_output_filename << std::endl;
+    std::cout << "Summary file: " << summary_output_filename << std::endl;
+    
+    if ( prior_output_filename.compare("") != 0 ) {
+        std::cout << "Prior distribution file: " << prior_output_filename << std::endl;
+    }
  
     
     ActualDataFile actual_data_file;
@@ -53,11 +60,11 @@ int InferABC( FactorToInfer factor,
         //return 0;
     }
     catch (std::exception& e) {
-        std::cerr << "Exception whille loading actual data: " << e.what() << std::endl;
+        std::cerr << "Exception while loading actual data: " << e.what() << std::endl;
         return 1;
     }
     catch (...) {
-        std::cerr << "Unknown exception whille loading actual data." << std::endl;
+        std::cerr << "Unknown exception while loading actual data." << std::endl;
         return 1;
     }
     
@@ -69,11 +76,19 @@ int InferABC( FactorToInfer factor,
         std::cout << "Done" << std::endl;
     }
     catch (std::exception& e) {
-        std::cerr << "Exception whille loading parameters: " << e.what() << std::endl;
+        std::cerr << "Exception while loading parameters: " << e.what() << std::endl;
+        return 1;
+    }
+    catch (std::string str_exp) {
+        std::cerr << "Exception while loading parameters: " << str_exp << std::endl;
+        return 1;
+    }
+    catch (const char* str_exp) {
+        std::cerr << "Exception while loading parameters: " << str_exp << std::endl;
         return 1;
     }
     catch (...) {
-        std::cerr << "Unknown exception whille loading parameters." << std::endl;
+        std::cerr << "Unknown exception while loading parameters." << std::endl;
         return 1;
     }
     
@@ -82,15 +97,18 @@ int InferABC( FactorToInfer factor,
     try {
         std::cout << "Starting ABC." << std::endl;
         
-        abc_object_sim.GetUniqueIndexSet(10);
+        //abc_object_sim.GetUniqueIndexSet(10);
         abc_object_sim.SetImmediateRejection(false);
-        abc_object_sim.RunABCInference(factor, 100);
-        abc_object_sim.ScaleSimulationResults();
+        //std::cout << "checkpoint alpha" << std::endl;
+        auto num_batches = my_zparams.GetInt(fits_constants::PARAM_SIM_REPEATS);
+        if ( num_batches > 10 ) num_batches = 10;
+        abc_object_sim.RunABCInference(factor, num_batches);
         
-        if (my_zparams.GetInt("_coverage", 0) > 0) {
+        
+        if (my_zparams.GetInt(fits_constants::PARAM_COVERAGE_SWITCH, fits_constants::PARAM_DEFAULT_COVERAGE_SWITCH) > 0) {
             std::cout << "Starting coverage." << std::endl;
             //abc_object_sim.DoCoverageTest();
-            abc_object_sim.DoCoverageCook();
+            
         }
         
         //auto start_coverage_time = std::chrono::high_resolution_clock::now();
@@ -121,46 +139,112 @@ int InferABC( FactorToInfer factor,
     
     
     
-    std::cout << std::endl << "Writing posterior distribution and summary files... " << std::endl;
+    std::cout << std::endl << "Writing posterior distribution and summary files... " << std::endl << std::endl;
     try {
-        ResultsStats result_stats;
+        ResultsStats result_stats(my_zparams);
         
-        std::cout << " getting results" << std::endl;
-        auto results_vector = abc_object_sim.GetResultsVector(true);
+        // std::cout << " getting results" << std::endl;
+        auto accepted_results_vector = abc_object_sim.GetResultsVector(true);
         
         result_stats.SetRejectionThreshold( abc_object_sim.GetRejectionThreshold() );
         
+        auto single_mutation_rate = my_zparams.GetFloat( fits_constants::PARAM_SINGLE_MUTATION_RATE, 0.0f );
+        result_stats.SetSingleMutrateUsed( single_mutation_rate != 0.0f );
+        
+        /*
+        for ( auto sim_counter=0; sim_counter<accepted_results_vector.size(); ++sim_counter ) {
+            std::string tmp_filename;
+            tmp_filename += "sim_out_gens" +  std::to_string(accepted_results_vector[sim_counter].num_generations) + "_" + std::to_string(sim_counter) + ".txt";
+            abc_object_sim.WriteSimDataToFile(tmp_filename, accepted_results_vector[sim_counter]);
+        }
+        */
+        
+        std::cout << "Summary:" << std::endl;
+        
         switch (factor) {
             case Fitness: {
-                result_stats.CalculateStatsFitness(results_vector);
+                
+                result_stats.SetPriorDistrib( my_zparams.GetString(fits_constants::PARAM_PRIOR_DISTRIB, fits_constants::PARAM_PRIOR_DISTRIB_DEFAULT ) );
+                
+                result_stats.CalculateStatsFitness(accepted_results_vector);
+                
                 std::string tmp_summary_str = result_stats.GetSummaryFitness();
+                
                 
                 std::cout << tmp_summary_str << std::endl;
                 
-                CMulatorToolbox::WriteFitnessDistribToFile(results_vector, distrib_output_filename);
-                CMulatorToolbox::WriteStringToFile(summary_output_filename, tmp_summary_str);
+                
+                result_stats.WriteFitnessDistribToFile(accepted_results_vector, posterior_output_filename);
+                
+                
+                result_stats.WriteStringToFile(summary_output_filename, tmp_summary_str);
+                
+                if ( prior_output_filename.compare("") != 0 ) {
+                    std::cout << "Prior... " << std::endl;
+                    
+                    auto tmp_prior = abc_object_sim.GetPriorFloat();
+                    
+                    result_stats.WritePriorDistribToFile(tmp_prior, prior_output_filename);
+                }
+                
                 break;
             }
                 
             case PopulationSize: {
-                result_stats.CalculateStatsPopulationSize(results_vector);
+                result_stats.CalculateStatsPopulationSize(accepted_results_vector);
                 std::string tmp_summary_str = result_stats.GetSummaryPopSize();
                 
                 std::cout << tmp_summary_str << std::endl;
                 
-                CMulatorToolbox::WritePopSizeDistribToFile(results_vector, distrib_output_filename);
-                CMulatorToolbox::WriteStringToFile(summary_output_filename, tmp_summary_str);
+                auto tmp_prior = abc_object_sim.GetPriorInt();
+                result_stats.WritePriorDistribToFile(tmp_prior, prior_output_filename);
+                
+                result_stats.WritePopSizeDistribToFile(accepted_results_vector, posterior_output_filename);
+                result_stats.WriteStringToFile(summary_output_filename, tmp_summary_str);
+                
+                if ( prior_output_filename.compare("") != 0 ) {
+                    std::cout << "Prior... " << std::endl;
+                    
+                    auto tmp_prior = abc_object_sim.GetPriorInt();
+                    
+                    result_stats.WritePriorDistribToFile(tmp_prior, prior_output_filename);
+                }
                 break;
             }
                 
             case MutationRate: {
-                result_stats.CalculateStatsMutation(results_vector);
+                auto infer_single_mutrate = my_zparams.GetInt(fits_constants::PARAM_MIN_LOG_SINGLE_MUTATION_RATE, 0);
+                
+                result_stats.SetSingleMutrateInferred( infer_single_mutrate != 0 );
+                result_stats.CalculateStatsMutation(accepted_results_vector);
                 std::string tmp_summary_str = result_stats.GetSummaryMutRate();
                 
                 std::cout << tmp_summary_str << std::endl;
                 
-                CMulatorToolbox::WriteMutRateDistribToFile(results_vector, distrib_output_filename);
-                CMulatorToolbox::WriteStringToFile(summary_output_filename, tmp_summary_str);
+                result_stats.WriteMutRateDistribToFile(accepted_results_vector, posterior_output_filename);
+                result_stats.WriteStringToFile(summary_output_filename, tmp_summary_str);
+                
+                if ( prior_output_filename.compare("") != 0 ) {
+                    std::cout << "Prior... " << std::endl;
+                    
+                    auto tmp_prior = abc_object_sim.GetPriorFloat();
+                    
+                    result_stats.WritePriorDistribToFile(tmp_prior, prior_output_filename);
+                }
+                break;
+            }
+                
+            case Generations: {
+                result_stats.CalculateStatsGenerations(accepted_results_vector);
+                std::string tmp_summary_str = result_stats.GetSummaryGenerations();
+                
+                std::cout << tmp_summary_str << std::endl;
+                
+                result_stats.WriteGenerationsDistribToFile(accepted_results_vector, posterior_output_filename);
+                result_stats.WriteStringToFile(summary_output_filename, tmp_summary_str);
+                
+                auto tmp_prior = abc_object_sim.GetPriorInt();
+                result_stats.WritePriorDistribToFile(tmp_prior, prior_output_filename);
                 break;
             }
         }
@@ -188,10 +272,6 @@ int RunSingleSimulation(std::string param_filename, std::string output_filename)
     try {
         my_zparams.ReadParameters(param_filename, true);
         
-        if ( my_zparams.GetInt(sim_object.PARAM_ALLELE_NO_INIT_FREQS, 1) > 0 ) {
-            throw "Simulating - allele initial frequencies must be provided, and you need to set _no_init_freqs_as_parameters=0";
-        }
-        
         sim_object.InitMemberVariables(my_zparams);
         
         if ( !sim_object.IsAbleToSimulate() ) {
@@ -202,6 +282,11 @@ int RunSingleSimulation(std::string param_filename, std::string output_filename)
         // sim_object.InitializeFromParamFile(param_filename);
     }
     catch (const char* txt) {
+        std::cerr << "Exception caught while initializing simulator object:" << std::endl;
+        std::cerr << txt << std::endl;
+        return 1;
+    }
+    catch (std::string txt) {
         std::cerr << "Exception caught while initializing simulator object:" << std::endl;
         std::cerr << txt << std::endl;
         return 1;
@@ -282,23 +367,6 @@ void test_parameters( std::string filename )
 
 void test_range()
 {
-    
-    
-    /*
-    clsFieldRange range_object( min, max, 0.05, 100);
-    
-    auto range_output = range_object.GetRandomCombinations(1000000, false);
-    
-    for (auto current_set : range_output) {
-        
-        for (auto current_value : current_set) {
-            std::cout << current_value << "\t";
-        }
-        std::cout << std::endl;
-    }
-     */
-    
-    
     //PriorSampler<float>::PriorDistributionType dist_type = PriorSampler<float>::PriorDistributionType::UNIFORM;
     //template class PriorSampler<float>;
     std::vector<float> min {0.0};
@@ -307,9 +375,10 @@ void test_range()
     std::vector<unsigned int> min_int { 40, 40, 40 };
     std::vector<unsigned int> max_int { 100, 100, 100 };
     
+    //PriorSampler<float> sampler( min, max, PriorDistributionType::SMOOTHED_COMPOSITE );
     PriorSampler<float> sampler( min, max, PriorDistributionType::FITNESS_COMPOSITE );
     
-    auto res_vec = sampler.SamplePrior(10000, min.size());
+    auto res_vec = sampler.SamplePrior(100000);
     
     for ( auto vec : res_vec ) {
         for ( auto val : vec ) {
@@ -322,23 +391,77 @@ void test_range()
     
 }
 
+void test_actualdata( std::string filename )
+{
+    ActualDataFile datafile;
+    datafile.LoadActualData(filename);
+    
+    auto vec = datafile.GetActualFrequencies();
+    
+    std::cout << std::endl;
+    for ( auto val : vec ) {
+        std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+    
+}
 
 void print_syntaxes(std::string exec_name)
 {
-    std::cout << "\t" << exec_name << " -fitness <param_file> <actual_data_file> <distribution_output_file> <summary_output_file" << std::endl << std::endl;
-    std::cout << "\t" << exec_name << " -mutation <param_file> <output_file>" << std::endl << std::endl;
-    std::cout << "\t" << exec_name << " -simulate <param_file> <output_file>" << std::endl << std::endl;
+    /*
+    std::regex rx{"\\S*[\\/\\\\](fits\\S*)"}; // (name) (value) pairs, ignore comments with #
+    
+    // match regex
+    std::smatch matches; // matched strings go here
+    
+    if (std::regex_search(exec_name , matches, rx, std::regex_constants::match_any )) {
+        // 0 is the whole line
+        
+        for ( auto a : matches ) {
+            std::cout << a << std::endl;
+        }
+        //exec_name = matches[ ];
+    }
+*/
+    // tired of regex and want this to look pretty
+    exec_name = "fits ";
+    std::cout << "\t" << exec_name << fits_constants::ARG_INFER_FITNESS
+    << " <param_file> <actual_data_file> <posterior_file> <summary_file> (optional: <prior_file>)" << std::endl << std::endl;
+    
+    std::cout << "\t" << exec_name << fits_constants::ARG_INFER_MUTATION
+    << " <param_file> <actual_data_file> <posterior_file> <summary_file> (optional: <prior_file>)" << std::endl << std::endl;
+    
+    std::cout << "\t" << exec_name << fits_constants::ARG_INFER_POPSIZE
+    << " <param_file> <actual_data_file> <posterior_file> <summary_file> (optional: <prior_file>)" << std::endl << std::endl;
+    
+    /*
+     std::cout << "\t" << exec_name << fits_constants::ARG_INFER_GENERATION
+    << " <param_file> <actual_data_file> <posterior_file> <summary_file> (optional: <prior_file>)" << std::endl << std::endl;
+     */
+    
+    std::cout << "\t" << exec_name << "-simulate <param_file> <output_file>" << std::endl << std::endl;
 }
 
 void print_welcome()
 {
     std::cout << std::endl << "================================================";
-    std::cout << std::endl << "                  FITS v0.87 ";
-    std::cout << std::endl << "  Flexible Inference from Time-Series data";
+    std::cout << std::endl << "                  FITS v" << fits_constants::current_version_str;
+    std::cout << std::endl << "    Flexible Inference from Time-Series data    ";
+    std::cout << std::endl << "         (c) Tal Zinger, Stern Lab, TAU         ";
     std::cout << std::endl << "================================================";
     std::cout << std::endl;
+    
+    
+    
 }
 
+bool IsInferenceRun( std::string first_argument )
+{
+    return ( first_argument.compare( fits_constants::ARG_INFER_FITNESS ) == 0
+            || first_argument.compare( fits_constants::ARG_INFER_MUTATION ) == 0
+            || first_argument.compare( fits_constants::ARG_INFER_POPSIZE ) == 0
+            || first_argument.compare( fits_constants::ARG_INFER_GENERATION ) == 0 );
+}
 
 int main(int argc, char* argv[])
 {
@@ -351,70 +474,80 @@ int main(int argc, char* argv[])
     
     std::string tmp_first_param = argv[1];
     
+    // This would make numbers nicer
+    std::cout.imbue(std::locale(fits_constants::used_locale));
     
+    std::string param_filename = "";
+    std::string actual_data_filename = "";
+    std::string posterior_output_filename = "";
+    std::string summary_output_filename = "";
+    std::string prior_output_filename = "";
     
-    
-    if ( tmp_first_param == "-fitness") {
+    if ( IsInferenceRun(tmp_first_param) ) {
         
-        print_welcome();
-        
-        if (argc != 6) {
+        // prior is optional
+        if (argc != 6 && argc != 7) {
             std::cout << "illegal number of arguments (" << argc-1 << "). Syntax is:" << std::endl;
             print_syntaxes(argv[0]);
             return 1;
         }
+        
+        param_filename = argv[2];
+        actual_data_filename = argv[3];
+        posterior_output_filename = argv[4];
+        summary_output_filename = argv[5];
+        
+        if ( argc == 7 ) {
+            prior_output_filename = argv[6];
+        }
+    }
+    
+    if ( tmp_first_param.compare( fits_constants::ARG_INFER_FITNESS ) == 0 ) {
+        
+        print_welcome();
         
         std::cout << "Inferring fitness" << std::endl;
         
-        std::string param_filename = argv[2];
-        std::string actual_data_filename = argv[3];
-        std::string distrib_output_filename = argv[4];
-        std::string summary_output_filename = argv[5];
-        
-        return InferABC( FactorToInfer::Fitness, param_filename, actual_data_filename,
-                            distrib_output_filename, summary_output_filename );
+        return InferABC( FactorToInfer::Fitness,
+                         param_filename, actual_data_filename,
+                         posterior_output_filename, summary_output_filename,
+                         prior_output_filename);
     }
     
-    if ( tmp_first_param == "-mutation") {
+    if ( tmp_first_param.compare( fits_constants::ARG_INFER_MUTATION ) == 0 ) {
         
         print_welcome();
-        
-        if (argc != 6) {
-            std::cout << "illegal number of arguments (" << argc-1 << "). Syntax is:" << std::endl;
-            print_syntaxes(argv[0]);
-            return 1;
-        }
         
         std::cout << "Inferring mutation rate" << std::endl;
-        
-        std::string param_filename = argv[2];
-        std::string actual_data_filename = argv[3];
-        std::string distrib_output_filename = argv[4];
-        std::string summary_output_filename = argv[5];
-        
-        return InferABC( FactorToInfer::MutationRate, param_filename, actual_data_filename,
-                        distrib_output_filename, summary_output_filename );
+    
+        return InferABC( FactorToInfer::MutationRate,
+                        param_filename, actual_data_filename,
+                        posterior_output_filename, summary_output_filename,
+                        prior_output_filename);
     }
     
-    if ( tmp_first_param == "-popsize") {
+    if ( tmp_first_param.compare( fits_constants::ARG_INFER_POPSIZE ) == 0 ) {
         
         print_welcome();
-        
-        if (argc != 6) {
-            std::cout << "illegal number of arguments (" << argc-1 << "). Syntax is:" << std::endl;
-            print_syntaxes(argv[0]);
-            return 1;
-        }
         
         std::cout << "Inferring population size" << std::endl;
         
-        std::string param_filename = argv[2];
-        std::string actual_data_filename = argv[3];
-        std::string distrib_output_filename = argv[4];
-        std::string summary_output_filename = argv[5];
+        return InferABC( FactorToInfer::PopulationSize,
+                        param_filename, actual_data_filename,
+                        posterior_output_filename, summary_output_filename,
+                        prior_output_filename );
+    }
+    
+    if ( tmp_first_param.compare( fits_constants::ARG_INFER_GENERATION ) == 0 ) {
         
-        return InferABC( FactorToInfer::PopulationSize, param_filename, actual_data_filename,
-                        distrib_output_filename, summary_output_filename );
+        print_welcome();
+        
+        std::cout << "Inferring generation interval" << std::endl;
+        
+        return InferABC( FactorToInfer::Generations,
+                        param_filename, actual_data_filename,
+                        posterior_output_filename, summary_output_filename,
+                        prior_output_filename );
     }
     
     if (tmp_first_param == "-simulate") {
@@ -429,13 +562,11 @@ int main(int argc, char* argv[])
         
         std::cout << "Running a single simulation" << std::endl;
         
-        std::string param_filename = argv[2];
+        param_filename = argv[2];
         std::string output_filename = argv[3];
         
         return RunSingleSimulation(param_filename, output_filename);
     }
-    
-    
     
     if (tmp_first_param == "-test_range") {
         try {
@@ -448,6 +579,31 @@ int main(int argc, char* argv[])
         return 1;
     }
  
+    if (tmp_first_param == "-test_actual") {
+        
+        test_actualdata( argv[2] );
+        return 1;
+    }
+    
+    if (tmp_first_param == "-levene") {
+        
+        ZParams myparams;
+        std::string strparams = argv[2];
+        myparams.ReadParameters(strparams, false);
+        ResultsStats result_stats(myparams);
+        
+        //std::vector<float> vec1 {1.0f, 1.4f, 1.6f, 4.6f, 9.5f, 3.6f};
+        //std::vector<float> vec2 {1.0f, 1.4f, 1.6f, 1.6f, 1.5f, 3.6f};
+        
+        std::vector<float> vec1 {1,3,5,6,8};
+        std::vector<float> vec2 {1,3,6,7,8};
+        
+        auto res = result_stats.LevenesTest2(vec1, vec2);
+        std::cout << "levenes output==" << res << std::endl;
+        return 1;
+    }
+    
+    
         
     // we should never reach here...
     print_welcome();
