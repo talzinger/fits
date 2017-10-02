@@ -23,7 +23,7 @@ namespace fits_constants {
     
     
     /* GENERAL */
-    const std::string current_version_str = "0.94";
+    const std::string current_version_str = "0.95";
     const std::string used_locale = "en_US.UTF-8";
     
     /* COMMAND LINE ARGUMANTS */

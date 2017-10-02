@@ -79,9 +79,9 @@ int CMulator::EvolveToGeneration( int target_generation )
 {
     
     // this distribution is unique - it takes a closed range [inclusive]
-    if ( _debug_mode ) {
-        std::cout << "Initializing local int distribution for alt N to max generation " << target_generation-1 << std::endl;
-    }
+    //if ( _debug_mode ) {
+     //   std::cout << "Initializing local int distribution for alt N to max generation " << target_generation-1 << std::endl;
+    //}
     
     boost::random::uniform_int_distribution<int> local_int_distrib(1, target_generation-1);
     
@@ -101,9 +101,9 @@ int CMulator::EvolveToGeneration( int target_generation )
     // should we revert to original population size
     bool alt_popsize_flag = false;
     
-    if ( _debug_mode ) {
-        std::cout << "Starting evolution for loop" << std::endl;
-    }
+    //if ( _debug_mode ) {
+    //    std::cout << "Starting evolution for loop" << std::endl;
+    //}
     
     
     // copy current frequencies to a convinient vector
@@ -114,19 +114,19 @@ int CMulator::EvolveToGeneration( int target_generation )
     for (_current_generation=1; _current_generation<=target_generation; _current_generation++) {
         
         boost::numeric::ublas::matrix_row<MATRIX_TYPE> prev_gen_row( _all_simulated_data, _current_generation-1 );
-        
+        /*
         if ( _debug_mode ) {
             std::cout << "previous generation: ";
             for ( auto val : prev_gen_row ) std::cout << val << "\t";
             std::cout << std::endl;
         }
-        
+        */
         
         if ( _alt_generation == _current_generation ) {
             _old_N = GetPopulationSize();
             SetPopulationSize(_alt_N);
             alt_popsize_flag = true;
-            
+            /*
             if (_debug_mode) {
                 std::cout << "Generation "
                 << _current_generation
@@ -134,25 +134,29 @@ int CMulator::EvolveToGeneration( int target_generation )
                 << _N << " instead of "
                 << _old_N << std::endl;
             }
+             */
         }
         
         if ( alt_popsize_flag ) {
             SetPopulationSize(_old_N);
             alt_popsize_flag = false;
             
+            /*
             if (_debug_mode) {
                 std::cout << "Generation "
                 << _current_generation
                 << ": reverted popsize to "
                 << _N << std::endl;
             }
+             */
         }
         
         
         // normalize fitness
-        if ( _debug_mode ) {
-            std::cout << "Normalizing fitness." << std::endl;
-        }
+        
+        //if ( _debug_mode ) {
+        //    std::cout << "Normalizing fitness." << std::endl;
+        //}
         
         std::vector<FLOAT_TYPE> allele_fitness_bar(_num_alleles, 0.0f);
         std::vector<FLOAT_TYPE> allele_fitness_adjusted(_num_alleles, 0.0f);
@@ -174,6 +178,7 @@ int CMulator::EvolveToGeneration( int target_generation )
                         [wbar]( FLOAT_TYPE f){ return f / wbar; } );
         
         
+        /*
         if ( _debug_mode ) {
             std::cout << "fitness values: ";
             for ( auto val : _allele_fitness ) std::cout << val << "\t";
@@ -189,7 +194,7 @@ int CMulator::EvolveToGeneration( int target_generation )
             std::cout << "wbar = " << wbar << std::endl;
             std::cout << "Multiplications" << std::endl;
         }
-
+         */
         // TODO: replace these nested for loops with matrix multiplication
         // vector of last generation X mutation_rate_matrix -> tmp1_vector
         // tmp1_vector X fitness_vector -> new_generation
@@ -207,9 +212,9 @@ int CMulator::EvolveToGeneration( int target_generation )
             }
         }
         
-        if ( _debug_mode ) {
-            std::cout << "Normalize probailities" << std::endl;
-        }
+        //if ( _debug_mode ) {
+        //    std::cout << "Normalize probailities" << std::endl;
+        //}
 
         // normalize probabilities
         FLOAT_TYPE sumall = std::accumulate( vec_after_deterministic.begin(),
@@ -228,9 +233,9 @@ int CMulator::EvolveToGeneration( int target_generation )
             
         }
         
-        if ( _debug_mode ) {
-            std::cout << "Stochastic step - Freqs2Binomial2Freqs; population size = " << _N << std::endl;
-        }
+        //if ( _debug_mode ) {
+        //    std::cout << "Stochastic step - Freqs2Binomial2Freqs; population size = " << _N << std::endl;
+        //}
         
         auto vec_after_stochastic = Freqs2Binomial2Freqs(vec_after_deterministic, _N);
         
@@ -238,9 +243,9 @@ int CMulator::EvolveToGeneration( int target_generation )
         // observed data is before bottleneck
         if ( _sample_size>0 ) {
             
-            if ( _debug_mode ) {
-                std::cout << "Observation - Freqs2Binomial2Freqs; population size = " << _sample_size << std::endl;
-            }
+            //if ( _debug_mode ) {
+            //    std::cout << "Observation - Freqs2Binomial2Freqs; population size = " << _sample_size << std::endl;
+            //}
             
             auto vec_observed = Freqs2Binomial2Freqs( vec_after_deterministic, _sample_size );
             
@@ -260,9 +265,9 @@ int CMulator::EvolveToGeneration( int target_generation )
             // like stochastic step but with other population size
             // brackets remains from multithreaded period where mutex was used via lock guard (has to be scoped)
         
-            if ( _debug_mode ) {
-                std::cout << "Bottleneck step - Freqs2Binomial2Freqs; population size = " << _bottleneck_size << std::endl;
-            }
+            //if ( _debug_mode ) {
+            //    std::cout << "Bottleneck step - Freqs2Binomial2Freqs; population size = " << _bottleneck_size << std::endl;
+            //}
             
             vec_after_stochastic = Freqs2Binomial2Freqs(vec_after_deterministic, _bottleneck_size);
             

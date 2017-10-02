@@ -5,8 +5,7 @@
 //  Created by Tal Zinger on 07/09/2016.
 //  Copyright © 2016 Stern Lab. All rights reserved.
 //
-// Parameter file handling,designed to be compatible with Parameters class
-// which was created by Meir Fuchs, Pupko Lab @ TAU
+
 
 #ifndef ZParams_h
 #define ZParams_h

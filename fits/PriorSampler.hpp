@@ -217,7 +217,8 @@ public:
     _fitness_neu_prob(fits_constants::FITNESS_NEU_PROB),
     _fitness_adv_prob(fits_constants::FITNESS_ADV_PROB)
     {
-        std::cout << "prior init123...";
+        //std::cout << "prior init123...";
+        
         if ( _min_vector.size() != _max_vector.size() ) {
             std::cerr << "Prior sampler: size of matrices do not match: min (" <<
             min_matrix.size1() << "," << min_matrix.size2() << ") vs max (" <<

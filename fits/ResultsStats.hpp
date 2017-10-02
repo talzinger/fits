@@ -183,6 +183,9 @@ public:
     std::vector<unsigned int> advantageous_percent;
     
     std::vector<float> levenes_pval;
+    boost::numeric::ublas::matrix<FLOAT_TYPE> levenes_pval_matrix;
+    
+    boost::numeric::ublas::matrix< std::vector<FLOAT_TYPE> > prior_matrix;
     
     std::vector<AlleleCategory> allele_category;
     

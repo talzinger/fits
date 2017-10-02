@@ -65,6 +65,9 @@ Solving the Bug of 0 Distance - 20170622
 TODO: consider measuring distance of only the mutant alleles and not the WT.
 
 
+FITS 0.95 2017-10-01
+ADDED:
+    - Levene's test for population size and mutation rate
 
 FITS 0.94
 ADDED:
